@@ -1,0 +1,2634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UCB Pathway Stakeholder Tool</title>
+<!-- Museo Sans substitute (Exo 2 closely matches weight range); Source Serif Pro for emphasis -->
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;700&family=Source+Serif+4:ital,wght@0,300;1,300&display=swap" rel="stylesheet">
+<style>
+  /* ── LANDING PAGE ─────────────────────────────────────────────────── */
+  #landing-page {
+    min-height: 100vh;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  #landing-page::before {
+    content: '';
+    position: absolute;
+    bottom: -120px;
+    right: -120px;
+    width: 520px;
+    height: 520px;
+    border: 1.5px solid rgba(0,20,137,0.07);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  #landing-page::after {
+    content: '';
+    position: absolute;
+    top: -80px;
+    left: -80px;
+    width: 360px;
+    height: 360px;
+    border: 1.5px solid rgba(0,20,137,0.05);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .landing-logo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 56px;
+    z-index: 1;
+  }
+  .landing-logo-badge {
+    width: 52px;
+    height: 42px;
+    background: #001489;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: -0.5px;
+  }
+  .landing-logo-text {
+    font-family: 'Source Serif 4', serif;
+    font-weight: 300;
+    font-size: 22px;
+    color: #001489;
+    line-height: 1.2;
+  }
+  .landing-logo-sub {
+    font-size: 11px;
+    color: var(--deep-gray);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-top: 2px;
+    opacity: 0.55;
+  }
+  .landing-headline {
+    font-family: 'Source Serif 4', serif;
+    font-weight: 300;
+    font-size: clamp(28px, 4vw, 44px);
+    color: #001489;
+    text-align: center;
+    margin-bottom: 10px;
+    z-index: 1;
+    line-height: 1.2;
+  }
+  .landing-sub {
+    font-size: 15px;
+    color: var(--deep-gray);
+    text-align: center;
+    margin-bottom: 56px;
+    z-index: 1;
+    max-width: 480px;
+    opacity: 0.7;
+  }
+  .therapy-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+    width: 100%;
+    max-width: 900px;
+    z-index: 1;
+  }
+  .therapy-card {
+    background: white;
+    border-radius: 4px;
+    padding: 36px 28px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+    border: 1.5px solid var(--frame-gray);
+    box-shadow: 0 2px 12px rgba(0,20,137,0.06);
+  }
+  .therapy-card:hover:not(.coming-soon) {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0,20,137,0.12);
+    border-color: #001489;
+  }
+  .therapy-card.coming-soon {
+    background: var(--frame-gray-light);
+    border: 1.5px solid var(--frame-gray);
+    cursor: default;
+    opacity: 0.65;
+  }
+  .therapy-card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--ucb-blue-25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    flex-shrink: 0;
+    font-size: 22px;
+  }
+  .therapy-card.coming-soon .therapy-card-icon {
+    background: var(--frame-gray);
+  }
+  .therapy-card-name {
+    font-family: 'Exo 2', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: #001489;
+    margin-bottom: 6px;
+  }
+  .therapy-card.coming-soon .therapy-card-name {
+    color: var(--deep-gray);
+  }
+  .therapy-card-desc {
+    font-size: 13px;
+    color: var(--deep-gray);
+    line-height: 1.5;
+    margin-bottom: 24px;
+  }
+  .therapy-card.coming-soon .therapy-card-desc {
+    color: var(--mid-gray);
+  }
+  .therapy-card-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #001489;
+    font-family: 'Exo 2', sans-serif;
+    letter-spacing: 0.3px;
+  }
+  .therapy-card-action::after {
+    content: '→';
+    transition: transform 0.2s;
+  }
+  .therapy-card:hover:not(.coming-soon) .therapy-card-action::after {
+    transform: translateX(4px);
+  }
+  .coming-soon-badge {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    background: var(--frame-gray);
+    color: var(--deep-gray);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 2px;
+    font-family: 'Exo 2', sans-serif;
+  }
+  .landing-tagline {
+    margin-top: 56px;
+    font-size: 12px;
+    color: var(--deep-gray);
+    letter-spacing: 0.5px;
+    z-index: 1;
+    font-style: italic;
+    opacity: 0.4;
+  }
+  /* Science corner decoration */
+  .science-corner {
+    position: absolute;
+    bottom: 40px;
+    left: 40px;
+    width: 60px;
+    height: 60px;
+    pointer-events: none;
+    opacity: 0.05;
+  }
+  .science-corner::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #001489;
+    clip-path: polygon(0 100%, 100% 0, 100% 100%);
+    border-radius: 0 0 0 2px;
+  }
+
+  /* ── BACK BUTTON in header ────────────────────────────────────────── */
+  .back-to-home {
+    background: white;
+    border: 1.5px solid var(--frame-gray);
+    color: var(--deep-gray);
+    font-family: 'Exo 2', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 13px;
+    border-radius: 2px;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 16px;
+  }
+  .back-to-home:hover { border-color: #001489; color: #001489; background: var(--frame-gray-light); }
+
+  @media (max-width: 600px) {
+    .therapy-cards { grid-template-columns: 1fr; }
+    .landing-headline { font-size: 26px; }
+  }
+  :root {
+    /* UCB Official Brand Palette — Style Guide October 2025 */
+
+    /* Primary */
+    --ucb-blue: #001489;          /* Reflex Blue — primary brand colour */
+    --ucb-blue-75: #404FA6;       /* 75% tint */
+    --ucb-blue-50: #8089C4;       /* 50% tint */
+    --ucb-blue-25: #BFC4E1;       /* 25% tint — pale backgrounds */
+
+    /* Primary accents */
+    --salmon: #F18070;            /* Light Salmon */
+    --salmon-pale: #FBDFDB;       /* 25% tint */
+    --marigold: #FFC658;          /* Light Marigold */
+    --marigold-pale: #FFF1D5;     /* 25% tint */
+
+    /* Greys */
+    --deep-gray: #4B4F54;
+    --mid-gray: #B1B3B3;
+    --frame-gray: #D0D3D4;
+    --frame-gray-light: #F3F4F4;  /* 25% tint */
+
+    /* Semantic aliases used throughout the app */
+    --teal: var(--ucb-blue);
+    --teal-light: var(--ucb-blue-75);
+    --teal-pale: var(--ucb-blue-25);
+    --teal-mid: #8089C4;
+    --slate: var(--ucb-blue);     /* headings */
+    --slate-mid: #404FA6;
+    --slate-light: var(--deep-gray);
+    --cream: #ffffff;             /* UCB uses white backgrounds */
+    --white: #FFFFFF;
+    --amber: var(--marigold);
+    --amber-pale: var(--marigold-pale);
+    --rose: var(--salmon);
+    --rose-pale: var(--salmon-pale);
+    --green: #387F97;             /* UCB Teal secondary */
+    --green-pale: #B5E4DD;
+    --purple: #9873AC;            /* UCB Lavender secondary */
+    --purple-pale: #CBB9D5;
+    --border: var(--frame-gray);
+    --shadow: 0 2px 12px rgba(0,20,137,0.07);
+    --shadow-lg: 0 8px 32px rgba(0,20,137,0.13);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Exo 2', 'Museo Sans', Arial, sans-serif;
+    background: var(--frame-gray-light);
+    color: var(--deep-gray);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: #ffffff;
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 0 var(--frame-gray), 0 2px 12px rgba(0,20,137,0.06);
+    border-bottom: 3px solid #001489;
+  }
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    height: 64px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .brand-icon {
+    width: 44px;
+    height: 36px;
+    background: #001489;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: -0.5px;
+    font-family: 'Exo 2', sans-serif;
+  }
+  .brand-text {
+    font-family: 'Source Serif 4', serif;
+    font-weight: 300;
+    font-size: 18px;
+    color: #001489;
+    letter-spacing: 0;
+  }
+  .brand-sub {
+    font-size: 10px;
+    color: var(--deep-gray);
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+
+  nav {
+    display: flex;
+    gap: 2px;
+  }
+  nav button {
+    background: none;
+    border: none;
+    color: var(--deep-gray);
+    font-family: 'Exo 2', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    padding: 8px 16px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+    letter-spacing: 0.2px;
+  }
+  nav button:hover { background: var(--frame-gray-light); color: #001489; }
+  nav button.active { background: #001489; color: white; font-weight: 700; }
+
+  /* MAIN LAYOUT */
+  main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+
+  /* PAGE SECTIONS */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: white;
+    border-radius: 4px;
+    box-shadow: var(--shadow);
+    padding: 28px;
+    margin-bottom: 24px;
+    border: 1px solid var(--frame-gray);
+  }
+  .card-title {
+    font-family: 'Source Serif 4', serif;
+    font-weight: 300;
+    font-size: 22px;
+    color: var(--ucb-blue);
+    margin-bottom: 4px;
+  }
+  .card-sub {
+    font-size: 13px;
+    color: var(--deep-gray);
+    margin-bottom: 24px;
+  }
+
+  /* FORM ELEMENTS */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .form-group label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ucb-blue);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 10px 12px;
+    border: 1.5px solid var(--frame-gray);
+    border-radius: 2px;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 14px;
+    color: var(--deep-gray);
+    background: white;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    border-color: var(--ucb-blue);
+    box-shadow: 0 0 0 3px var(--ucb-blue-25);
+  }
+  .form-group textarea { resize: vertical; min-height: 80px; }
+
+  /* BUTTONS */
+  .btn {
+    padding: 10px 22px;
+    border-radius: 2px;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: 0.3px;
+  }
+  .btn-primary { background: #001489; color: white; }
+  .btn-primary:hover { background: #001489; opacity: 0.88; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,20,137,0.22); }
+  .btn-outline { background: white; color: #001489; border: 2px solid #001489; }
+  .btn-outline:hover { background: var(--ucb-blue-25); }
+  .btn-danger { background: var(--salmon); color: white; }
+  .btn-danger:hover { background: #D45040; }
+  .btn-sm { padding: 6px 14px; font-size: 12px; }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; border-radius: 2px; border: 1px solid var(--frame-gray); }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    background: var(--frame-gray-light);
+    color: #001489;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 12px 16px;
+    text-align: left;
+    white-space: nowrap;
+    font-family: 'Exo 2', sans-serif;
+    border-bottom: 2px solid #001489;
+  }
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--frame-gray);
+    font-size: 13px;
+    vertical-align: top;
+    color: var(--deep-gray);
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--ucb-blue-25); }
+
+  /* BADGES */
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 2px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  .badge-high     { background: var(--salmon-pale);    color: #A84544; }
+  .badge-medium   { background: var(--marigold-pale);  color: #996017; }
+  .badge-low      { background: var(--ucb-blue-25);    color: #001489; }
+  .badge-ra       { background: var(--ucb-blue-25);    color: #001489; }
+  .badge-psa      { background: #CBB9D5;               color: #784E90; }
+  .badge-pp       { background: var(--marigold-pale);  color: #996017; }
+  .badge-all      { background: #001489;               color: white;   }
+  .badge-unaware  { background: var(--frame-gray-light); color: var(--deep-gray); }
+  .badge-neutral  { background: var(--ucb-blue-25);    color: #404FA6; }
+  .badge-interested { background: var(--marigold-pale); color: #996017; }
+  .badge-supportive { background: #B5E4DD;             color: #005683; }
+  .badge-expand   { background: #DAF1ED;               color: #00816D; }
+  .badge-advocate { background: #001489;               color: white;   }
+  .badge-resistant { background: var(--salmon-pale);   color: #A84544; }
+
+  /* STATS ROW */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: white;
+    border-radius: 2px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--frame-gray);
+    border-left: 4px solid #001489;
+    transition: box-shadow 0.2s;
+  }
+  .stat-card:hover { box-shadow: var(--shadow-lg); }
+  .stat-card.amber  { border-left-color: var(--marigold); }
+  .stat-card.rose   { border-left-color: var(--salmon);   }
+  .stat-card.green  { border-left-color: #387F97;         }
+  .stat-card.purple { border-left-color: #9873AC;         }
+  .stat-num {
+    font-family: 'Source Serif 4', serif;
+    font-weight: 300;
+    font-size: 36px;
+    color: var(--deep-gray);
+    line-height: 1;
+  }
+  .stat-label { font-size: 12px; color: var(--deep-gray); margin-top: 4px; font-weight: 400; }
+
+  /* QUADRANT */
+  #quadrant-canvas {
+    width: 100%;
+    max-width: 600px;
+    display: block;
+    margin: 0 auto;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+
+  /* PATHWAY MAP */
+  .pathway-step {
+    display: grid;
+    grid-template-columns: 48px 1fr 1fr 1fr 1fr 1fr 1fr 48px;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .pathway-step:hover { background: var(--teal-pale); }
+  .pathway-step.header { background: #001489; color: white; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .ps-cell {
+    padding: 12px 14px;
+    font-size: 13px;
+    border-right: 1px solid var(--border);
+  }
+  .ps-cell:last-child { border-right: none; }
+  .ps-num {
+    width: 36px;
+    height: 36px;
+    background: var(--ucb-blue-25);
+    color: #001489;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .pathway-step .ps-cell:first-child { display: flex; align-items: center; justify-content: center; }
+
+  /* PAINS GAINS */
+  .pg-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .pg-header {
+    background: var(--slate);
+    color: white;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .pg-body { display: grid; grid-template-columns: 1fr 1fr; }
+  .pg-col { padding: 16px 20px; }
+  .pg-col:first-child { border-right: 1px solid var(--border); background: var(--rose-pale); }
+  .pg-col:last-child { background: var(--green-pale); }
+  .pg-col-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+  .pg-col:first-child .pg-col-title { color: var(--rose); }
+  .pg-col:last-child .pg-col-title { color: var(--green); }
+  .pg-item { font-size: 13px; color: var(--slate); margin-bottom: 8px; padding-left: 14px; position: relative; line-height: 1.5; }
+  .pg-item::before { content: '•'; position: absolute; left: 0; color: inherit; }
+  .pg-col:first-child .pg-item::before { color: var(--rose); }
+  .pg-col:last-child .pg-item::before { color: var(--green); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--slate-light);
+  }
+  .empty-state-icon { font-size: 48px; margin-bottom: 16px; }
+  .empty-state h3 { font-family: 'Source Serif 4', serif; font-size: 20px; color: var(--slate); margin-bottom: 8px; }
+
+  /* TOAST */
+  #toast {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    background: var(--slate);
+    color: white;
+    padding: 14px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: var(--shadow-lg);
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+
+  .section-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  /* LEGEND */
+  .legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--slate-mid); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* FILTER ROW */
+  .filter-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .filter-row select, .filter-row input {
+    padding: 8px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 2px;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 13px;
+    outline: none;
+    background: white;
+  }
+  .filter-row select:focus, .filter-row input:focus { border-color: var(--ucb-blue); }
+
+  /* Step filter pills */
+  .step-filter-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 2px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'Exo 2', sans-serif;
+    cursor: pointer;
+    border: 1.5px solid var(--frame-gray);
+    background: white;
+    color: var(--deep-gray);
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .step-filter-pill:hover { border-color: var(--ucb-blue); color: var(--ucb-blue); }
+  .step-filter-pill.active {
+    background: var(--ucb-blue);
+    border-color: var(--ucb-blue);
+    color: white;
+  }
+
+  @media (max-width: 768px) {
+    .header-inner { padding: 0 16px; }
+    main { padding: 20px 12px; }
+    .pg-body { grid-template-columns: 1fr; }
+    .pg-col:first-child { border-right: none; border-bottom: 1px solid var(--border); }
+    nav button { padding: 8px 10px; font-size: 12px; }
+    .pathway-step { grid-template-columns: 40px 1fr 1fr 48px; }
+    .pathway-step .ps-cell:nth-child(n+4):not(:nth-child(7)):not(:nth-child(8)) { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── LANDING PAGE ──────────────────────────────────────────────────── -->
+<div id="landing-page">
+  <div class="science-corner"></div>
+
+  <div class="landing-logo">
+    <div class="landing-logo-badge">ucb</div>
+    <div>
+      <div class="landing-logo-text">UCB Pathway Tool</div>
+      <div class="landing-logo-sub">Stakeholder Mapping Platform</div>
+    </div>
+  </div>
+
+  <h1 class="landing-headline">Select a therapy area</h1>
+  <p class="landing-sub">Choose a pathway below to access stakeholder mapping, clinical pathway tools and engagement planning.</p>
+
+  <div class="therapy-cards">
+
+    <!-- Rheumatology — active -->
+    <div class="therapy-card" onclick="enterApp('rheumatology')">
+      <div class="therapy-card-icon">
+        <!-- Flexed arm / muscle -->
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M10 26c-1.1 0-2-.9-2-2v-1c0-1.1.9-2 2-2h1.5l-2-6c-.3-.9 0-1.9.8-2.4l1.2-.8V9c0-2.2 1.8-4 4-4s4 1.8 4 4v3.8l1.2.8c.8.5 1.1 1.5.8 2.4l-2 6H21c1.1 0 2 .9 2 2v1c0 1.1-.9 2-2 2H10z" fill="white"/>
+          <path d="M15.5 5.5C14.7 6 14 7 14 8.2c0 .8.3 1.5.8 2C16 9.5 17 9 17.5 8c.3-.6.4-1.3.2-1.9-.4-.4-.8-.7-2.2-.6z" fill="rgba(255,255,255,0.35)"/>
+          <path d="M13 16l.7 2h4.6l.7-2H13z" fill="rgba(0,20,137,0.2)"/>
+        </svg>
+      </div>
+      <div class="therapy-card-name">Rheumatology</div>
+      <div class="therapy-card-desc">Stakeholder mapping across RA, PsA and Plaque Psoriasis. Covers all 13 pathway steps from referral through to formulary.</div>
+      <div class="therapy-card-action">Open tool</div>
+    </div>
+
+    <!-- Dermatology — coming soon -->
+    <div class="therapy-card coming-soon">
+      <div class="coming-soon-badge">Coming soon</div>
+      <div class="therapy-card-icon">
+        <!-- Skin cross-section layers -->
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Body outline / torso -->
+          <rect x="7" y="6" width="18" height="20" rx="9" fill="white"/>
+          <!-- Skin layer lines -->
+          <rect x="7" y="11" width="18" height="2.5" rx="0" fill="rgba(0,20,137,0.18)"/>
+          <rect x="7" y="16" width="18" height="2.5" rx="0" fill="rgba(0,20,137,0.12)"/>
+          <!-- Surface texture dots -->
+          <circle cx="12" cy="8.5" r="1" fill="rgba(0,20,137,0.3)"/>
+          <circle cx="16" cy="8" r="1" fill="rgba(0,20,137,0.3)"/>
+          <circle cx="20" cy="8.5" r="1" fill="rgba(0,20,137,0.3)"/>
+          <!-- Dermis detail -->
+          <ellipse cx="16" cy="20" rx="3.5" ry="2" fill="rgba(0,20,137,0.15)"/>
+        </svg>
+      </div>
+      <div class="therapy-card-name">Dermatology</div>
+      <div class="therapy-card-desc">Stakeholder mapping for Atopic Dermatitis, Hidradenitis Suppurativa and Plaque Psoriasis pathways.</div>
+    </div>
+
+    <!-- Osteoporosis — coming soon -->
+    <div class="therapy-card coming-soon">
+      <div class="coming-soon-badge">Coming soon</div>
+      <div class="therapy-card-icon">
+        <!-- Long bone with rounded ends (femur shape) -->
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Top knob -->
+          <circle cx="16" cy="6" r="4" fill="white"/>
+          <!-- Bottom knob -->
+          <circle cx="16" cy="26" r="4" fill="white"/>
+          <!-- Shaft -->
+          <rect x="13.5" y="8" width="5" height="16" rx="2.5" fill="white"/>
+          <!-- Medullary canal (hollow centre) -->
+          <rect x="15" y="11" width="2" height="10" rx="1" fill="rgba(0,20,137,0.25)"/>
+          <!-- Cortical detail lines -->
+          <line x1="13.5" y1="14" x2="18.5" y2="14" stroke="rgba(0,20,137,0.15)" stroke-width="1"/>
+          <line x1="13.5" y1="18" x2="18.5" y2="18" stroke="rgba(0,20,137,0.15)" stroke-width="1"/>
+        </svg>
+      </div>
+      <div class="therapy-card-name">Osteoporosis</div>
+      <div class="therapy-card-desc">Stakeholder mapping for primary and secondary osteoporosis and fragility fracture prevention pathways.</div>
+    </div>
+
+  </div>
+
+  <p class="landing-tagline">Inspired by patients. Driven by science.</p>
+</div>
+
+<!-- ── APP SHELL (hidden until therapy area selected) ──────────────── -->
+<div id="app-shell" style="display:none;">
+
+<header>
+  <div class="header-inner">
+    <div style="display:flex;align-items:center;gap:0;">
+      <button class="back-to-home" onclick="goHome()">← Home</button>
+      <div class="brand">
+        <div class="brand-icon">ucb</div>
+        <div>
+          <div class="brand-text" id="header-therapy-name">Rheumatology Pathway</div>
+          <div class="brand-sub" style="">Stakeholder Mapping Tool</div>
+        </div>
+      </div>
+    </div>
+    <nav>
+      <button onclick="showPage('dashboard', this)">Dashboard</button>
+      <button onclick="showPage('register', this)">Stakeholders</button>
+      <button onclick="showPage('pathway', this)">Pathway</button>
+      <button onclick="showPage('quadrant', this)">Quadrant</button>
+      <button onclick="showPage('pains', this)">Pains &amp; Gains</button>
+      <button class="active" onclick="showPage('flow', this)">Flow Diagram</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <!-- DASHBOARD -->
+  <div id="page-dashboard" class="page">
+    <div style="margin-bottom:28px;">
+      <h1 style="font-family:'Source Serif 4',serif;font-size:32px;color:var(--slate);margin-bottom:6px;">Overview</h1>
+      <p style="color:var(--slate-light);font-size:15px;">Combined stakeholder mapping across RA, PsA and Plaque Psoriasis pathways</p>
+    </div>
+
+    <div class="stats-row" id="stats-row"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
+      <div class="card">
+        <div class="card-title">Advocacy Breakdown</div>
+        <div class="card-sub">By level across all stakeholders</div>
+        <canvas id="advocacyChart" height="200"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-title">Indication Coverage</div>
+        <div class="card-sub">Stakeholders per condition</div>
+        <canvas id="indicationChart" height="200"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Priority Stakeholders</div>
+      <div class="card-sub">High impact & high influence — require closest engagement</div>
+      <div id="priority-list"></div>
+    </div>
+  </div>
+
+  <!-- STAKEHOLDER REGISTER -->
+  <div id="page-register" class="page">
+
+    <style>
+      .steps-checkbox-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 6px;
+        margin-top: 6px;
+      }
+      .step-cb-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 10px;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.15s;
+        font-size: 12px;
+        color: var(--slate-mid);
+        user-select: none;
+        background: white;
+      }
+      .step-cb-item:hover { border-color: var(--teal); background: var(--teal-pale); }
+      .step-cb-item input[type=checkbox] { accent-color: var(--teal); width: 14px; height: 14px; flex-shrink:0; }
+      .step-cb-item.checked { border-color: var(--teal); background: var(--teal-pale); color: var(--teal); font-weight: 600; }
+      .step-num-badge {
+        width: 20px; height: 20px; border-radius: 50%;
+        background: var(--slate); color: white;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: 10px; font-weight: 700; flex-shrink: 0;
+      }
+      .step-cb-item.checked .step-num-badge { background: var(--teal); }
+
+      /* Edit modal */
+      .stkh-edit-overlay {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 600; padding: 20px;
+      }
+      .stkh-edit-modal {
+        background: white; border-radius: 16px; padding: 28px;
+        width: 100%; max-width: 640px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+        max-height: 92vh; overflow-y: auto;
+      }
+      .stkh-edit-modal h3 {
+        font-family: 'Source Serif 4', serif; font-size: 20px;
+        color: var(--slate); margin-bottom: 4px;
+      }
+      .stkh-edit-modal p { font-size: 13px; color: var(--slate-light); margin-bottom: 20px; }
+    </style>
+
+    <div class="card">
+      <div id="reg-form-title" class="card-title">Add Stakeholder</div>
+      <div class="card-sub">Record clinicians and their position in the pathway</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Organisation / Trust</label>
+          <input type="text" id="f-org" list="nhs-trusts-list" placeholder="Search or type NHS Trust..." autocomplete="off">
+          <datalist id="nhs-trusts-list">
+            <!-- Acute Trusts -->
+            <option value="Airedale NHS Foundation Trust">
+            <option value="Alder Hey Children's NHS Foundation Trust">
+            <option value="Ashford and St Peter's Hospitals NHS Foundation Trust">
+            <option value="Barking, Havering and Redbridge University Hospitals NHS Trust">
+            <option value="Barnsley Hospital NHS Foundation Trust">
+            <option value="Barts Health NHS Trust">
+            <option value="Bedfordshire Hospitals NHS Foundation Trust">
+            <option value="Blackpool Teaching Hospitals NHS Foundation Trust">
+            <option value="Bolton NHS Foundation Trust">
+            <option value="Bradford Teaching Hospitals NHS Foundation Trust">
+            <option value="Brighton and Sussex University Hospitals NHS Trust">
+            <option value="Buckinghamshire Healthcare NHS Trust">
+            <option value="Burton Hospitals NHS Foundation Trust">
+            <option value="Calderdale and Huddersfield NHS Foundation Trust">
+            <option value="Cambridge University Hospitals NHS Foundation Trust">
+            <option value="Central Manchester University Hospitals NHS Foundation Trust">
+            <option value="Chelsea and Westminster Hospital NHS Foundation Trust">
+            <option value="Chesterfield Royal Hospital NHS Foundation Trust">
+            <option value="City Hospitals Sunderland NHS Foundation Trust">
+            <option value="Colchester Hospital University NHS Foundation Trust">
+            <option value="Cornwall Partnership NHS Foundation Trust">
+            <option value="Countess of Chester Hospital NHS Foundation Trust">
+            <option value="County Durham and Darlington NHS Foundation Trust">
+            <option value="Croydon Health Services NHS Trust">
+            <option value="Derby Teaching Hospitals NHS Foundation Trust">
+            <option value="Doncaster and Bassetlaw Teaching Hospitals NHS Foundation Trust">
+            <option value="Dorset County Hospital NHS Foundation Trust">
+            <option value="Dudley Group NHS Foundation Trust">
+            <option value="East and North Hertfordshire NHS Trust">
+            <option value="East Cheshire NHS Trust">
+            <option value="East Kent Hospitals University NHS Foundation Trust">
+            <option value="East Lancashire Hospitals NHS Trust">
+            <option value="East Midlands Ambulance Service NHS Trust">
+            <option value="East Suffolk and North Essex NHS Foundation Trust">
+            <option value="East Sussex Healthcare NHS Trust">
+            <option value="Epsom and St Helier University Hospitals NHS Trust">
+            <option value="Frimley Health NHS Foundation Trust">
+            <option value="Gateshead Health NHS Foundation Trust">
+            <option value="George Eliot Hospital NHS Trust">
+            <option value="Gloucestershire Hospitals NHS Foundation Trust">
+            <option value="Great Ormond Street Hospital for Children NHS Foundation Trust">
+            <option value="Great Western Hospitals NHS Foundation Trust">
+            <option value="Guy's and St Thomas' NHS Foundation Trust">
+            <option value="Hampshire Hospitals NHS Foundation Trust">
+            <option value="Harrogate and District NHS Foundation Trust">
+            <option value="Heart of England NHS Foundation Trust">
+            <option value="Hertfordshire Community NHS Trust">
+            <option value="Homerton University Hospital NHS Foundation Trust">
+            <option value="Hull University Teaching Hospitals NHS Trust">
+            <option value="Humber NHS Foundation Trust">
+            <option value="Imperial College Healthcare NHS Trust">
+            <option value="Ipswich Hospital NHS Trust">
+            <option value="Isle of Wight NHS Trust">
+            <option value="James Paget University Hospitals NHS Foundation Trust">
+            <option value="Kettering General Hospital NHS Foundation Trust">
+            <option value="King's College Hospital NHS Foundation Trust">
+            <option value="Kingston Hospital NHS Foundation Trust">
+            <option value="Lancashire Teaching Hospitals NHS Foundation Trust">
+            <option value="Leeds Teaching Hospitals NHS Trust">
+            <option value="Lewisham and Greenwich NHS Trust">
+            <option value="Liverpool Heart and Chest Hospital NHS Foundation Trust">
+            <option value="Liverpool University Hospitals NHS Foundation Trust">
+            <option value="London North West University Healthcare NHS Trust">
+            <option value="Luton and Dunstable University Hospital NHS Foundation Trust">
+            <option value="Maidstone and Tunbridge Wells NHS Trust">
+            <option value="Manchester University NHS Foundation Trust">
+            <option value="Medway NHS Foundation Trust">
+            <option value="Mid and South Essex NHS Foundation Trust">
+            <option value="Mid Cheshire Hospitals NHS Foundation Trust">
+            <option value="Mid Yorkshire Hospitals NHS Trust">
+            <option value="Milton Keynes University Hospital NHS Foundation Trust">
+            <option value="Moorfields Eye Hospital NHS Foundation Trust">
+            <option value="Newcastle upon Tyne Hospitals NHS Foundation Trust">
+            <option value="Norfolk and Norwich University Hospitals NHS Foundation Trust">
+            <option value="North Bristol NHS Trust">
+            <option value="North Cumbria Integrated Care NHS Foundation Trust">
+            <option value="North Middlesex University Hospital NHS Trust">
+            <option value="North Tees and Hartlepool NHS Foundation Trust">
+            <option value="Northern Lincolnshire and Goole NHS Foundation Trust">
+            <option value="Northumbria Healthcare NHS Foundation Trust">
+            <option value="Nottingham University Hospitals NHS Trust">
+            <option value="Oxford University Hospitals NHS Foundation Trust">
+            <option value="Pennine Acute Hospitals NHS Trust">
+            <option value="Pennine Care NHS Foundation Trust">
+            <option value="Plymouth Hospitals NHS Trust">
+            <option value="Poole Hospital NHS Foundation Trust">
+            <option value="Portsmouth Hospitals University NHS Trust">
+            <option value="Princess Alexandra Hospital NHS Trust">
+            <option value="Queen Elizabeth Hospital Birmingham">
+            <option value="Queen Victoria Hospital NHS Foundation Trust">
+            <option value="Royal Berkshire NHS Foundation Trust">
+            <option value="Royal Brompton and Harefield NHS Foundation Trust">
+            <option value="Royal Cornwall Hospitals NHS Trust">
+            <option value="Royal Devon and Exeter NHS Foundation Trust">
+            <option value="Royal Free London NHS Foundation Trust">
+            <option value="Royal Liverpool and Broadgreen University Hospitals NHS Trust">
+            <option value="Royal National Orthopaedic Hospital NHS Trust">
+            <option value="Royal Surrey County Hospital NHS Foundation Trust">
+            <option value="Royal United Hospitals Bath NHS Foundation Trust">
+            <option value="Royal Wolverhampton NHS Trust">
+            <option value="Salisbury NHS Foundation Trust">
+            <option value="Sandwell and West Birmingham Hospitals NHS Trust">
+            <option value="Sheffield Teaching Hospitals NHS Foundation Trust">
+            <option value="Sherwood Forest Hospitals NHS Foundation Trust">
+            <option value="Shrewsbury and Telford Hospital NHS Trust">
+            <option value="Somerset NHS Foundation Trust">
+            <option value="South Tees Hospitals NHS Foundation Trust">
+            <option value="South Tyneside and Sunderland NHS Foundation Trust">
+            <option value="South Warwickshire University NHS Foundation Trust">
+            <option value="Southend University Hospital NHS Foundation Trust">
+            <option value="Southport and Ormskirk Hospital NHS Trust">
+            <option value="St George's University Hospitals NHS Foundation Trust">
+            <option value="St Helens and Knowsley Teaching Hospitals NHS Trust">
+            <option value="Stockport NHS Foundation Trust">
+            <option value="Surrey and Sussex Healthcare NHS Trust">
+            <option value="Tameside and Glossop Integrated Care NHS Foundation Trust">
+            <option value="Taunton and Somerset NHS Foundation Trust">
+            <option value="The Clatterbridge Cancer Centre NHS Foundation Trust">
+            <option value="The Newcastle upon Tyne Hospitals NHS Foundation Trust">
+            <option value="The Pennine Acute Hospitals NHS Trust">
+            <option value="The Robert Jones and Agnes Hunt Orthopaedic Hospital NHS Foundation Trust">
+            <option value="The Royal Marsden NHS Foundation Trust">
+            <option value="The Walton Centre NHS Foundation Trust">
+            <option value="Torbay and South Devon NHS Foundation Trust">
+            <option value="United Lincolnshire Hospitals NHS Trust">
+            <option value="University College London Hospitals NHS Foundation Trust">
+            <option value="University Hospital Southampton NHS Foundation Trust">
+            <option value="University Hospitals Birmingham NHS Foundation Trust">
+            <option value="University Hospitals Bristol and Weston NHS Foundation Trust">
+            <option value="University Hospitals Coventry and Warwickshire NHS Trust">
+            <option value="University Hospitals Derby and Burton NHS Foundation Trust">
+            <option value="University Hospitals Dorset NHS Foundation Trust">
+            <option value="University Hospitals Leicester NHS Trust">
+            <option value="University Hospitals of Morecambe Bay NHS Foundation Trust">
+            <option value="University Hospitals of North Midlands NHS Trust">
+            <option value="University Hospitals Plymouth NHS Trust">
+            <option value="Walsall Healthcare NHS Trust">
+            <option value="Warrington and Halton Teaching Hospitals NHS Foundation Trust">
+            <option value="West Hertfordshire Teaching Hospitals NHS Trust">
+            <option value="West Suffolk NHS Foundation Trust">
+            <option value="Weston Area Health NHS Trust">
+            <option value="Whittington Health NHS Trust">
+            <option value="Wirral University Teaching Hospital NHS Foundation Trust">
+            <option value="Worcestershire Acute Hospitals NHS Trust">
+            <option value="Wrightington, Wigan and Leigh Teaching Hospitals NHS Foundation Trust">
+            <option value="Wye Valley NHS Trust">
+            <option value="Yeovil District Hospital NHS Foundation Trust">
+            <option value="York and Scarborough Teaching Hospitals NHS Foundation Trust">
+            <!-- Welsh Health Boards -->
+            <option value="Aneurin Bevan University Health Board">
+            <option value="Betsi Cadwaladr University Health Board">
+            <option value="Cardiff and Vale University Health Board">
+            <option value="Cwm Taf Morgannwg University Health Board">
+            <option value="Hywel Dda University Health Board">
+            <option value="Powys Teaching Health Board">
+            <option value="Swansea Bay University Health Board">
+            <!-- Scottish Health Boards -->
+            <option value="NHS Ayrshire and Arran">
+            <option value="NHS Borders">
+            <option value="NHS Dumfries and Galloway">
+            <option value="NHS Fife">
+            <option value="NHS Forth Valley">
+            <option value="NHS Grampian">
+            <option value="NHS Greater Glasgow and Clyde">
+            <option value="NHS Highland">
+            <option value="NHS Lanarkshire">
+            <option value="NHS Lothian">
+            <option value="NHS Orkney">
+            <option value="NHS Shetland">
+            <option value="NHS Tayside">
+            <option value="NHS Western Isles">
+            <!-- Northern Ireland HSC Trusts -->
+            <option value="Belfast Health and Social Care Trust">
+            <option value="Northern Health and Social Care Trust">
+            <option value="South Eastern Health and Social Care Trust">
+            <option value="Southern Health and Social Care Trust">
+            <option value="Western Health and Social Care Trust">
+          </datalist>
+        </div>
+        <div class="form-group">
+          <label>Stakeholder Name</label>
+          <input type="text" id="f-name" placeholder="e.g. Dr Smith">
+        </div>
+        <div class="form-group">
+          <label>Role</label>
+          <select id="f-role" onchange="toggleRoleOther(this)">
+            <option value="">-- Select role --</option>
+            <option value="Consultant">Consultant</option>
+            <option value="GP">GP</option>
+            <option value="Nurse">Nurse</option>
+            <option value="Pharmacist">Pharmacist</option>
+            <option value="Other">Other</option>
+          </select>
+          <input type="text" id="f-role-other" placeholder="Please specify role..." style="display:none;margin-top:6px;" oninput="syncRoleOther(this)">
+        </div>
+        <div class="form-group">
+          <label>Title</label>
+          <input type="text" id="f-title" placeholder="e.g. Specialist, Lead, Senior, Advanced">
+        </div>
+        <div class="form-group">
+          <label>Indication(s)</label>
+          <select id="f-indication">
+            <option value="RA">RA</option>
+            <option value="PsA">PsA</option>
+            <option value="Plaque Psoriasis">Plaque Psoriasis</option>
+            <option value="Multiple / All">Multiple / All</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Impact</label>
+          <select id="f-impact">
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Influence</label>
+          <select id="f-influence">
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Advocacy Level</label>
+          <select id="f-advocacy">
+            <option value="Unaware">Unaware</option>
+            <option value="Aware">Aware</option>
+            <option value="Interest">Interest</option>
+            <option value="Trial">Trial</option>
+            <option value="Expand">Expand</option>
+            <option value="Advocacy">Advocacy</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Key Interests</label>
+          <input type="text" id="f-interests" placeholder="e.g. Treat-to-target, MDT working">
+        </div>
+        <div class="form-group">
+          <label>Engagement Strategy</label>
+          <input type="text" id="f-strategy" placeholder="e.g. 1:1 meetings, advisory board">
+        </div>
+      </div>
+
+      <!-- Multi-step checkboxes -->
+      <div class="form-group" style="margin-bottom:20px;">
+        <label>Pathway Steps <span style="font-weight:400;color:var(--slate-light);text-transform:none;letter-spacing:0;">(select all that apply)</span></label>
+        <div class="steps-checkbox-grid" id="f-steps-grid">
+          <!-- rendered by JS -->
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:20px;">
+        <label>Notes</label>
+        <textarea id="f-notes" placeholder="Any additional context..."></textarea>
+      </div>
+      <input type="hidden" id="f-edit-id">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-primary" id="reg-save-btn" onclick="saveStakeholder()">➕ Add Stakeholder</button>
+        <button class="btn btn-outline" id="reg-cancel-btn" style="display:none;" onclick="cancelEditStakeholder()">Cancel</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-actions">
+        <div>
+          <div class="card-title">Stakeholders</div>
+          <div class="card-sub" id="register-count">0 stakeholders recorded</div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-outline btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
+          <button class="btn btn-outline btn-sm" onclick="clearAll()">🗑 Clear All</button>
+        </div>
+      </div>
+
+      <div class="filter-row" style="flex-wrap:wrap;gap:8px;">
+        <input type="text" id="filter-org" placeholder="Filter by organisation..." oninput="renderRegister()" style="min-width:180px;">
+        <select onchange="renderRegister()" id="filter-role">
+          <option value="">All Roles</option>
+          <option value="Consultant">Consultant</option>
+          <option value="GP">GP</option>
+          <option value="Nurse">Nurse</option>
+          <option value="Pharmacist">Pharmacist</option>
+          <option value="Other">Other</option>
+        </select>
+        <select onchange="renderRegister()" id="filter-indication">
+          <option value="">All Indications</option>
+          <option value="RA">RA</option>
+          <option value="PsA">PsA</option>
+          <option value="Plaque Psoriasis">Plaque Psoriasis</option>
+          <option value="Multiple / All">Multiple / All</option>
+        </select>
+        <select onchange="renderRegister()" id="filter-impact">
+          <option value="">All Impact</option>
+          <option value="High">High</option>
+          <option value="Medium">Medium</option>
+          <option value="Low">Low</option>
+        </select>
+        <select onchange="renderRegister()" id="filter-advocacy">
+          <option value="">All Advocacy</option>
+          <option value="Unaware">Unaware</option>
+          <option value="Aware">Aware</option>
+          <option value="Interest">Interest</option>
+          <option value="Trial">Trial</option>
+          <option value="Expand">Expand</option>
+          <option value="Advocacy">Advocacy</option>
+        </select>
+        <input type="text" id="filter-search" placeholder="Search name, org, role..." oninput="renderRegister()" style="flex:1;min-width:160px;">
+      </div>
+
+      <!-- Step multi-selector -->
+      <div style="margin-top:10px;margin-bottom:4px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--ucb-blue);margin-bottom:8px;">
+          Filter by Pathway Step
+          <button onclick="clearStepFilter()" id="clear-step-filter" style="display:none;margin-left:10px;font-size:10px;font-weight:700;background:var(--salmon-pale);color:#A84544;border:none;border-radius:2px;padding:2px 8px;cursor:pointer;letter-spacing:0.3px;">✕ Clear</button>
+        </div>
+        <div id="filter-steps-pills" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Organisation</th>
+              <th>Name</th>
+              <th>Title</th>
+              <th>Role</th>
+              <th>Indication</th>
+              <th>Impact</th>
+              <th>Influence</th>
+              <th>Advocacy</th>
+              <th>Steps</th>
+              <th>Key Interests</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="register-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PATHWAY MAP -->
+  <div id="page-pathway" class="page">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+      <div>
+        <h1 style="font-family:'Source Serif 4',serif;font-size:28px;color:var(--slate);margin-bottom:4px;">Pathway Map</h1>
+        <p style="color:var(--slate-light);font-size:14px;">Core clinical pathway with condition-specific variations. Click ✏ on any row to edit roles.</p>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="resetFlowRoles()">↺ Reset roles</button>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden;">
+      <div style="overflow-x:auto;">
+        <div class="pathway-step header">
+          <div class="ps-cell">Step</div>
+          <div class="ps-cell">Core Pathway Step</div>
+          <div class="ps-cell">Rheumatoid Arthritis (RA)</div>
+          <div class="ps-cell">Psoriatic Arthritis (PsA)</div>
+          <div class="ps-cell">Plaque Psoriasis</div>
+          <div class="ps-cell">Lead Role(s)</div>
+          <div class="ps-cell">Supporting Role(s)</div>
+          <div class="ps-cell" style="width:48px;text-align:center;"></div>
+        </div>
+        <div id="pathway-steps"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:24px;">
+      <div class="card-title">Stakeholders at each step</div>
+      <div class="card-sub">Your registered stakeholders mapped to pathway steps</div>
+      <div id="step-stakeholders"></div>
+    </div>
+  </div>
+
+  <!-- QUADRANT -->
+  <div id="page-quadrant" class="page">
+    <div class="card">
+      <div class="card-title">Influence–Impact Matrix</div>
+      <div class="card-sub">Visualise stakeholder positioning. Top-right = highest priority for engagement.</div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--rose)"></div> High/High</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div> High/Low or Low/High</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--teal)"></div> Medium</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#bbb"></div> Low/Low</div>
+      </div>
+      <canvas id="quadrant-canvas" height="520"></canvas>
+    </div>
+  </div>
+
+  <!-- PAINS & GAINS -->
+  <div id="page-pains" class="page">
+    <div class="card">
+      <div class="card-title">Pains &amp; Gains by Role</div>
+      <div class="card-sub">Select a role to load the templated pains and gains — edit as needed before saving</div>
+      <div class="form-grid">
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Role</label>
+          <select id="pg-role-template" onchange="applyPGTemplate(this.value)">
+            <option value="">-- Select role --</option>
+            <option value="Consultant">Consultant (Rheumatologist)</option>
+            <option value="Nurse">Nurse (Specialist Rheumatology Nurse)</option>
+            <option value="Pharmacist">Pharmacist (Secondary Care / HCD)</option>
+            <option value="GP">GP (Primary Care Physician)</option>
+            <option value="Radiologist">Radiologist</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Pain (current friction) <span style="font-weight:400;color:var(--deep-gray);text-transform:none;letter-spacing:0;">— edit or add to the template below</span></label>
+          <textarea id="pg-pain" rows="6" placeholder="Select a role above to load template..."></textarea>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Gain (what good looks like) <span style="font-weight:400;color:var(--deep-gray);text-transform:none;letter-spacing:0;">— edit or add to the template below</span></label>
+          <textarea id="pg-gain" rows="6" placeholder="Select a role above to load template..."></textarea>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="addPainGain()">➕ Save Entry</button>
+        <button class="btn btn-outline" onclick="clearPGForm()">Clear</button>
+      </div>
+    </div>
+
+    <div id="pg-cards-container"></div>
+  </div>
+
+  <!-- FLOW DIAGRAM -->
+  <div id="page-flow" class="page active">
+    <style>
+      .cpw-wrap { display:flex; flex-direction:column; align-items:center; padding:8px 0 32px; }
+      .cpw-phase-label {
+        width:100%; max-width:560px;
+        font-size:10px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase;
+        color:#001489; padding:18px 0 6px; display:flex; align-items:center; gap:10px;
+      }
+      .cpw-phase-label::after { content:''; flex:1; height:1px; background:var(--border); }
+      .cpw-node {
+        width:100%; max-width:560px; position:relative;
+        background:white; border-radius:14px; box-shadow:var(--shadow);
+        border:1.5px solid var(--border); overflow:visible;
+        transition:box-shadow 0.2s, border-color 0.2s;
+      }
+      .cpw-node:hover { box-shadow:var(--shadow-lg); border-color:var(--teal-mid); }
+      .cpw-node-header {
+        display:flex; align-items:center; gap:0; border-bottom:1px solid var(--border);
+      }
+      .cpw-step-num {
+        width:52px; min-height:60px; background:var(--ucb-blue-25); color:#001489;
+        display:flex; align-items:center; justify-content:center;
+        font-family:'Source Serif 4',serif; font-size:22px; flex-shrink:0;
+        border-radius:12px 0 0 0; border-right:1px solid var(--frame-gray);
+      }
+      .cpw-step-title {
+        padding:14px 16px; flex:1;
+        font-size:14px; font-weight:600; color:var(--slate); line-height:1.35;
+      }
+      .cpw-step-edit-btn {
+        padding:10px 14px; background:none; border:none; cursor:pointer;
+        color:var(--slate-light); font-size:16px; border-radius:0 12px 0 0;
+        transition:background 0.15s, color 0.15s;
+      }
+      .cpw-step-edit-btn:hover { background:var(--teal-pale); color:var(--teal); }
+      .cpw-roles {
+        display:grid; grid-template-columns:1fr 1fr;
+        padding:12px 16px 14px 16px; gap:10px;
+      }
+      .cpw-role-block { }
+      .cpw-role-label {
+        font-size:10px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase;
+        margin-bottom:5px;
+      }
+      .cpw-role-label.lead { color:var(--teal); }
+      .cpw-role-label.support { color:var(--slate-light); }
+      .cpw-role-pill {
+        display:inline-flex; align-items:center; gap:6px;
+        padding:4px 10px 4px 8px; border-radius:20px; font-size:12px; font-weight:500;
+        cursor:pointer; transition:opacity 0.15s;
+      }
+      .cpw-role-pill.lead { background:var(--teal-pale); color:var(--teal); border:1px solid var(--teal-mid); }
+      .cpw-role-pill.support { background:#f4f6f8; color:var(--slate-mid); border:1px solid var(--border); }
+      .cpw-role-pill .remove-role {
+        width:14px; height:14px; border-radius:50%; background:rgba(0,0,0,0.12);
+        display:none; align-items:center; justify-content:center; font-size:9px; flex-shrink:0;
+      }
+      .cpw-role-pill:hover .remove-role { display:flex; }
+      .cpw-role-add {
+        display:inline-flex; align-items:center; gap:4px;
+        padding:4px 10px; border-radius:20px; font-size:11px; font-weight:600;
+        background:none; border:1.5px dashed var(--border); color:var(--slate-light);
+        cursor:pointer; transition:all 0.15s; margin-top:4px;
+      }
+      .cpw-role-add:hover { border-color:var(--teal); color:var(--teal); background:var(--teal-pale); }
+      .cpw-stakeholders-bar {
+        padding:8px 16px; border-top:1px solid var(--border);
+        display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+        background:var(--cream); border-radius:0 0 12px 12px;
+      }
+      .cpw-stkh-chip {
+        font-size:11px; padding:2px 8px; border-radius:10px;
+        background:var(--teal); color:white; font-weight:600;
+      }
+      .cpw-arrow {
+        width:2px; height:28px; background:var(--teal); margin:0 auto;
+        position:relative; flex-shrink:0;
+      }
+      .cpw-arrow::after {
+        content:''; position:absolute; bottom:-6px; left:50%;
+        transform:translateX(-50%);
+        border-left:6px solid transparent; border-right:6px solid transparent;
+        border-top:8px solid var(--teal);
+      }
+      .cpw-formulary-gap { height:8px; }
+      .cpw-edit-overlay {
+        position:fixed; inset:0; background:rgba(0,0,0,0.45);
+        display:flex; align-items:center; justify-content:center;
+        z-index:500; padding:20px;
+      }
+      .cpw-edit-modal {
+        background:white; border-radius:16px; padding:28px;
+        width:100%; max-width:480px; box-shadow:var(--shadow-lg);
+        max-height:90vh; overflow-y:auto;
+      }
+      .cpw-edit-modal h3 { font-family:'Source Serif 4',serif; font-size:20px; margin-bottom:4px; }
+      .cpw-edit-modal p { font-size:13px; color:var(--slate-light); margin-bottom:20px; }
+      .cpw-tag-input-row { display:flex; gap:8px; margin-top:8px; }
+      .cpw-tag-input-row input {
+        flex:1; padding:8px 12px; border:1.5px solid var(--border); border-radius:8px;
+        font-family:'Exo 2',sans-serif; font-size:13px; outline:none;
+      }
+      .cpw-tag-input-row input:focus { border-color:var(--teal); }
+      .cpw-tags-list { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; min-height:28px; }
+      .cpw-tag-item {
+        display:inline-flex; align-items:center; gap:6px;
+        padding:4px 10px; border-radius:20px; font-size:12px; font-weight:500;
+        cursor:default;
+      }
+      .cpw-tag-item.lead { background:white; color:#001489; border:1.5px solid #001489; font-weight:700; }
+      .cpw-tag-item.support { background:#f4f6f8; color:var(--slate-mid); border:1px solid var(--border); }
+      .cpw-tag-item button { background:none; border:none; cursor:pointer; color:inherit; font-size:14px; padding:0; line-height:1; opacity:0.5; }
+      .cpw-tag-item button:hover { opacity:1; }
+    </style>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+      <div>
+        <h1 style="font-family:'Source Serif 4',serif;font-size:28px;color:var(--slate);margin-bottom:4px;">Clinical Pathway Flow</h1>
+        <p style="color:var(--slate-light);font-size:14px;">13-step rheumatology pathway. Click ✏ on any step to edit roles.</p>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-outline btn-sm" onclick="printFlow()">🖨 Print / Export</button>
+        <button class="btn btn-outline btn-sm" onclick="resetFlowRoles()">↺ Reset roles</button>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px;padding:10px 16px;background:white;border-radius:10px;border:1px solid var(--border);box-shadow:var(--shadow);">
+      <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--slate-mid);">
+        <div style="width:14px;height:14px;border-radius:7px;background:var(--teal);"></div> Lead decision maker
+      </div>
+      <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--slate-mid);">
+        <div style="width:14px;height:14px;border-radius:7px;background:#e2e6ea;border:1px solid var(--border)"></div> Supporting role
+      </div>
+      <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--slate-mid);">
+        <div style="width:14px;height:14px;border-radius:7px;background:var(--slate);"></div> Step number
+      </div>
+      <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--slate-mid);">
+        <div style="width:10px;height:10px;border-radius:5px;background:var(--teal);"></div> Mapped stakeholder count
+      </div>
+    </div>
+
+    <div class="cpw-wrap" id="cpw-wrap"></div>
+
+    <!-- Edit modal -->
+    <div class="cpw-edit-overlay" id="cpw-edit-overlay" style="display:none;" onclick="if(event.target===this)closeEditModal()">
+      <div class="cpw-edit-modal">
+        <h3 id="cpw-edit-title">Edit step</h3>
+        <p id="cpw-edit-sub">Adjust the lead and supporting roles for this step.</p>
+        <input type="hidden" id="cpw-edit-step-id">
+
+        <div style="margin-bottom:18px;">
+          <div class="cpw-role-label lead" style="font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:8px;">Lead role (decision maker)</div>
+          <div id="cpw-edit-leads" class="cpw-tags-list"></div>
+          <div class="cpw-tag-input-row">
+            <select id="cpw-lead-select" style="flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:2px;font-family:'Exo 2',sans-serif;font-size:13px;outline:none;background:white;" onchange="showFlowRoleOther('lead', this)">
+              <option value="">-- Select role --</option>
+              <option value="Consultant">Consultant</option>
+              <option value="GP">GP</option>
+              <option value="Nurse">Nurse</option>
+              <option value="Pharmacist">Pharmacist</option>
+              <option value="Other">Other</option>
+            </select>
+            <button class="btn btn-primary btn-sm" onclick="addFlowRole('lead')">Add</button>
+          </div>
+          <input type="text" id="cpw-lead-other" placeholder="Specify role..." style="display:none;width:100%;margin-top:6px;padding:8px 12px;border:1.5px solid var(--border);border-radius:2px;font-family:'Exo 2',sans-serif;font-size:13px;outline:none;">
+        </div>
+
+        <div style="margin-bottom:24px;">
+          <div class="cpw-role-label support" style="font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:8px;">Supporting roles</div>
+          <div id="cpw-edit-supports" class="cpw-tags-list"></div>
+          <div class="cpw-tag-input-row">
+            <select id="cpw-support-select" style="flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:2px;font-family:'Exo 2',sans-serif;font-size:13px;outline:none;background:white;" onchange="showFlowRoleOther('support', this)">
+              <option value="">-- Select role --</option>
+              <option value="Consultant">Consultant</option>
+              <option value="GP">GP</option>
+              <option value="Nurse">Nurse</option>
+              <option value="Pharmacist">Pharmacist</option>
+              <option value="Other">Other</option>
+            </select>
+            <button class="btn btn-outline btn-sm" onclick="addFlowRole('support')">Add</button>
+          </div>
+          <input type="text" id="cpw-support-other" placeholder="Specify role..." style="display:none;width:100%;margin-top:6px;padding:8px 12px;border:1.5px solid var(--border);border-radius:2px;font-family:'Exo 2',sans-serif;font-size:13px;outline:none;">
+        </div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+          <button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveFlowRoles()">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+</div><!-- /#app-shell -->
+
+<div id="toast">✓ <span id="toast-msg"></span></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ─── AIRTABLE CONFIG ─────────────────────────────────────────────────────────
+
+const AT_TOKEN = 'pato9DmsJ3I1EkLYH.0ee7268ad995d9965b1b32b87f9c634bf284f92edfd8e029ab287e703be6ad06';
+const AT_BASE  = 'app1ENiTGrD7MARmH';
+const AT_URL   = `https://api.airtable.com/v0/${AT_BASE}`;
+const AT_HEADS = { 'Authorization': `Bearer ${AT_TOKEN}`, 'Content-Type': 'application/json' };
+
+// In-memory cache — everything the app needs
+let stakeholders = [];   // { id, _atId, org, name, role, indication, impact, influence, advocacy, steps, interests, strategy, notes }
+let selectedStepFilters = new Set(); // step numbers active in register filter
+let painGains    = [];   // { id, _atId, stakeholderId, stakeholderName, stakeholderOrg, pain, gain }
+let flowRoles    = {};   // { [stepNum]: { _atId, leads:[], supports:[] } }
+
+// ─── PATHWAY STEPS DATA ──────────────────────────────────────────────────────
+
+const PATHWAY_STEPS = [
+  { step:1,  core:"Recognition and referral to specialist service",          ra:"Recognition of inflammatory arthritis symptoms",                   psa:"Recognition of joint symptoms with psoriasis",                    pp:"Dermatology referral triggering rheumatology involvement",          lead:"GP" },
+  { step:2,  core:"Specialist triage and prioritisation",                    ra:"Rheumatology referral triage",                                     psa:"Rheumatology referral triage",                                    pp:"Dermatology triage with possible rheumatology referral",            lead:"Rheumatology triage nurse" },
+  { step:3,  core:"First specialist consultation and clinical assessment",   ra:"Rheumatology consultation",                                        psa:"Rheumatology consultation assessing skin and joint disease",       pp:"Dermatology consultation may involve rheumatology referral",        lead:"Consultant rheumatologist" },
+  { step:4,  core:"Diagnostic confirmation and phenotype assessment",        ra:"RA diagnostic confirmation",                                       psa:"PsA phenotype assessment",                                        pp:"Dermatology severity assessment PASI/DLQI",                         lead:"Consultant specialist" },
+  { step:5,  core:"First-line treatment initiation",                         ra:"csDMARD initiation",                                               psa:"Conventional systemic therapy",                                   pp:"Topicals or phototherapy",                                          lead:"Consultant specialist" },
+  { step:6,  core:"Monitoring treatment response",                           ra:"DAS28 monitoring",                                                 psa:"Joint and skin monitoring",                                       pp:"Dermatology monitoring",                                            lead:"Rheumatology nurse" },
+  { step:7,  core:"Assessment for advanced therapy eligibility",             ra:"Eligibility per NICE criteria",                                    psa:"Eligibility based on joint and skin burden",                      pp:"Biologic eligibility dermatology-led",                              lead:"Consultant specialist" },
+  { step:8,  core:"Biologic therapy selection",                              ra:"Biologic or targeted DMARD choice",                                psa:"Phenotype-led biologic selection",                                pp:"Dermatology biologic selection",                                    lead:"Consultant specialist" },
+  { step:9,  core:"Pre-biologic screening",                                  ra:"TB/hepatitis screening",                                           psa:"TB/hepatitis screening",                                          pp:"TB/hepatitis screening",                                            lead:"Specialist nurse" },
+  { step:10, core:"Biologic initiation",                                     ra:"Biologic clinic initiation",                                       psa:"Biologic clinic initiation",                                      pp:"Biologic clinic initiation",                                        lead:"Rheumatology nurse" },
+  { step:11, core:"Follow-up monitoring",                                    ra:"Response monitoring",                                              psa:"Response monitoring",                                             pp:"Dermatology follow-up",                                             lead:"Consultant specialist" },
+  { step:12, core:"Treatment optimisation",                                  ra:"Dose optimisation or switching",                                   psa:"Switching biologic therapy",                                      pp:"Switching biologic therapy",                                        lead:"Consultant specialist" },
+  { step:13, core:"Formulary positioning and approval",                      ra:"Formulary review and Blueteq",                                     psa:"Formulary review and Blueteq",                                    pp:"Formulary review and Blueteq",                                      lead:"Formulary pharmacist" }
+];
+
+
+
+function setLoading(on, msg = 'Saving…') {
+  let el = document.getElementById('at-loading');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'at-loading';
+    el.style.cssText = 'position:fixed;inset:0;background:rgba(10,34,64,0.45);display:flex;align-items:center;justify-content:center;z-index:9999;';
+    el.innerHTML = `<div style="background:white;border-radius:14px;padding:28px 36px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+      <div style="width:36px;height:36px;border:3px solid var(--frame-gray);border-top-color:#001489;border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 14px;"></div>
+      <div id="at-loading-msg" style="font-family:'Exo 2',sans-serif;font-size:14px;font-weight:600;color:#0A2240;">${msg}</div>
+    </div>`;
+    const style = document.createElement('style');
+    style.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+    document.head.appendChild(style);
+    document.body.appendChild(el);
+  }
+  el.querySelector('#at-loading-msg').textContent = msg;
+  el.style.display = on ? 'flex' : 'none';
+}
+
+// ─── AIRTABLE HELPERS ────────────────────────────────────────────────────────
+
+async function atFetchAll(table) {
+  let records = [], offset = null;
+  do {
+    const url = `${AT_URL}/${encodeURIComponent(table)}` + (offset ? `?offset=${offset}` : '');
+    const res = await fetch(url, { headers: AT_HEADS });
+    if (!res.ok) throw new Error(`Airtable error ${res.status}: ${await res.text()}`);
+    const data = await res.json();
+    records = records.concat(data.records || []);
+    offset = data.offset || null;
+  } while (offset);
+  return records;
+}
+
+async function atCreate(table, fields) {
+  const res = await fetch(`${AT_URL}/${encodeURIComponent(table)}`, {
+    method: 'POST', headers: AT_HEADS,
+    body: JSON.stringify({ fields })
+  });
+  if (!res.ok) throw new Error(`Airtable create error ${res.status}: ${await res.text()}`);
+  return await res.json();
+}
+
+async function atUpdate(table, recordId, fields) {
+  const res = await fetch(`${AT_URL}/${encodeURIComponent(table)}/${recordId}`, {
+    method: 'PATCH', headers: AT_HEADS,
+    body: JSON.stringify({ fields })
+  });
+  if (!res.ok) throw new Error(`Airtable update error ${res.status}: ${await res.text()}`);
+  return await res.json();
+}
+
+async function atDelete(table, recordId) {
+  const res = await fetch(`${AT_URL}/${encodeURIComponent(table)}/${recordId}`, {
+    method: 'DELETE', headers: AT_HEADS
+  });
+  if (!res.ok) throw new Error(`Airtable delete error ${res.status}: ${await res.text()}`);
+  return await res.json();
+}
+
+// ─── LOAD ALL DATA FROM AIRTABLE ─────────────────────────────────────────────
+
+async function loadAllData() {
+  setLoading(true, 'Loading data from Airtable…');
+  try {
+    // Load stakeholders
+    const sRecs = await atFetchAll('Stakeholders');
+    stakeholders = sRecs.map(r => ({
+      _atId: r.id,
+      id: r.id,                                       // use Airtable record ID as the app ID
+      org:        r.fields['Organisation'] || '',
+      name:       r.fields['Name'] || '',
+      title:      r.fields['Title'] || '',
+      role:       r.fields['Role'] || '',
+      indication: r.fields['Indication'] || '',
+      impact:     r.fields['Impact'] || '',
+      influence:  r.fields['Influence'] || '',
+      advocacy:   r.fields['Advocacy'] || '',
+      steps:      r.fields['Steps'] || [],
+      step:       (r.fields['Steps'] || [])[0] || '',
+      interests:  r.fields['Key Interests'] || '',
+      strategy:   r.fields['Engagement Strategy'] || '',
+      notes:      r.fields['Notes'] || ''
+    }));
+
+    // Load pathway roles
+    const rRecs = await atFetchAll('PathwayRoles');
+    flowRoles = {};
+    rRecs.forEach(r => {
+      const num = r.fields['StepNumber'];
+      if (num) {
+        flowRoles[num] = {
+          _atId:    r.id,
+          leads:    r.fields['Leads']    ? r.fields['Leads'].split('|').filter(Boolean)    : [],
+          supports: r.fields['Supports'] ? r.fields['Supports'].split('|').filter(Boolean) : []
+        };
+      }
+    });
+    // Fill defaults for any steps not yet in Airtable
+    Object.entries(DEFAULT_FLOW_ROLES).forEach(([k, v]) => {
+      if (!flowRoles[+k]) flowRoles[+k] = { _atId: null, leads: [...v.leads], supports: [...v.supports] };
+    });
+
+    // Load pains & gains
+    const pgRecs = await atFetchAll('PainsGains');
+    painGains = pgRecs.map(r => ({
+      _atId:           r.id,
+      id:              r.id,
+      stakeholderId:   r.fields['StakeholderName'] || '',
+      stakeholderName: r.fields['StakeholderName'] || '',
+      stakeholderOrg:  '',
+      pain:            r.fields['Pain'] || '',
+      gain:            r.fields['Gain'] || ''
+    }));
+
+    setLoading(false);
+  } catch (e) {
+    setLoading(false);
+    toast('⚠ Could not load from Airtable: ' + e.message);
+    console.error(e);
+  }
+}
+
+// ─── DATA LAYER — STAKEHOLDERS ───────────────────────────────────────────────
+
+// ─── ROLE DROPDOWN HELPERS ───────────────────────────────────────────────────
+
+function toggleRoleOther(sel) {
+  const other = document.getElementById('f-role-other');
+  if (sel.value === 'Other') {
+    other.style.display = 'block';
+    other.focus();
+  } else {
+    other.style.display = 'none';
+    other.value = '';
+  }
+}
+
+function getRoleValue() {
+  const sel = document.getElementById('f-role');
+  if (sel.value === 'Other') {
+    return document.getElementById('f-role-other').value.trim();
+  }
+  return sel.value;
+}
+
+// ─── SAVE / EDIT STAKEHOLDER ─────────────────────────────────────────────────
+
+async function saveStakeholder() {
+  const org  = document.getElementById('f-org').value.trim();
+  const role = getRoleValue();
+  if (!org || !role) { toast('Organisation and Role are required'); return; }
+
+  const editId = document.getElementById('f-edit-id').value;
+  const steps  = getSelectedSteps();
+
+  const fields = {
+    'Organisation':        org,
+    'Title':               document.getElementById('f-title').value.trim(),
+    'Name':                document.getElementById('f-name').value.trim(),
+    'Role':                getRoleValue(),
+    'Indication':          document.getElementById('f-indication').value,
+    'Impact':              document.getElementById('f-impact').value,
+    'Influence':           document.getElementById('f-influence').value,
+    'Advocacy':            document.getElementById('f-advocacy').value,
+    'Steps':               steps,
+    'Key Interests':       document.getElementById('f-interests').value.trim(),
+    'Engagement Strategy': document.getElementById('f-strategy').value.trim(),
+    'Notes':               document.getElementById('f-notes').value.trim()
+  };
+
+  setLoading(true, editId ? 'Updating stakeholder…' : 'Adding stakeholder…');
+  try {
+    if (editId) {
+      const rec = await atUpdate('Stakeholders', editId, fields);
+      const idx = stakeholders.findIndex(s => s._atId === editId);
+      if (idx > -1) stakeholders[idx] = { ...stakeholders[idx], ...atStakeholderFromRec(rec) };
+      toast('Stakeholder updated ✓');
+    } else {
+      const rec = await atCreate('Stakeholders', fields);
+      stakeholders.push(atStakeholderFromRec(rec));
+      toast('Stakeholder added ✓');
+    }
+    clearRegForm();
+    renderRegister();
+    updatePGDropdown();
+  } catch (e) {
+    toast('⚠ Save failed: ' + e.message);
+  }
+  setLoading(false);
+}
+
+function atStakeholderFromRec(r) {
+  return {
+    _atId: r.id, id: r.id,
+    org:        r.fields['Organisation'] || '',
+    name:       r.fields['Name'] || '',
+    title:      r.fields['Title'] || '',
+    role:       r.fields['Role'] || '',
+    indication: r.fields['Indication'] || '',
+    impact:     r.fields['Impact'] || '',
+    influence:  r.fields['Influence'] || '',
+    advocacy:   r.fields['Advocacy'] || '',
+    steps:      r.fields['Steps'] || [],
+    step:       (r.fields['Steps'] || [])[0] || '',
+    interests:  r.fields['Key Interests'] || '',
+    strategy:   r.fields['Engagement Strategy'] || '',
+    notes:      r.fields['Notes'] || ''
+  };
+}
+
+async function deleteStakeholder(id) {
+  if (!confirm('Delete this stakeholder?')) return;
+  setLoading(true, 'Deleting…');
+  try {
+    await atDelete('Stakeholders', id);
+    stakeholders = stakeholders.filter(s => s._atId !== id);
+    // also remove their pain/gain records
+    const pgToDelete = painGains.filter(p => p.stakeholderId === id);
+    for (const pg of pgToDelete) { await atDelete('PainsGains', pg._atId); }
+    painGains = painGains.filter(p => p.stakeholderId !== id);
+    renderRegister();
+    updatePGDropdown();
+    toast('Stakeholder removed');
+  } catch (e) { toast('⚠ Delete failed: ' + e.message); }
+  setLoading(false);
+}
+
+async function clearAll() {
+  if (!confirm('Delete ALL stakeholders and pain/gain entries from Airtable? This cannot be undone.')) return;
+  setLoading(true, 'Clearing all data…');
+  try {
+    for (const s of [...stakeholders]) { await atDelete('Stakeholders', s._atId); }
+    for (const p of [...painGains])    { await atDelete('PainsGains', p._atId); }
+    stakeholders = []; painGains = [];
+    renderRegister(); updatePGDropdown();
+    toast('All data cleared');
+  } catch (e) { toast('⚠ Clear failed: ' + e.message); }
+  setLoading(false);
+}
+
+// ─── DATA LAYER — PATHWAY ROLES ──────────────────────────────────────────────
+
+async function saveFlowRoles() {
+  const step = editingStep;
+  const newRoles = { leads: [...editLeads], supports: [...editSupports] };
+  const existing = flowRoles[step] || {};
+
+  setLoading(true, 'Saving pathway roles…');
+  try {
+    const fields = {
+      'StepNumber': step,
+      'StepName':   PATHWAY_STEPS.find(p => p.step === step)?.core || '',
+      'Leads':      newRoles.leads.join('|'),
+      'Supports':   newRoles.supports.join('|')
+    };
+    if (existing._atId) {
+      await atUpdate('PathwayRoles', existing._atId, fields);
+      flowRoles[step] = { ...existing, ...newRoles };
+    } else {
+      const rec = await atCreate('PathwayRoles', fields);
+      flowRoles[step] = { _atId: rec.id, ...newRoles };
+    }
+    closeEditModal();
+    if (document.getElementById('page-flow').classList.contains('active')) renderFlow();
+    if (document.getElementById('page-pathway').classList.contains('active')) renderPathway();
+    toast(`Step ${step} roles saved ✓`);
+  } catch (e) { toast('⚠ Save failed: ' + e.message); }
+  setLoading(false);
+}
+
+async function resetFlowRoles() {
+  if (!confirm('Reset all pathway roles to defaults? This will overwrite Airtable data.')) return;
+  setLoading(true, 'Resetting roles…');
+  try {
+    // Delete existing PathwayRoles records
+    const existing = Object.values(flowRoles).filter(r => r._atId);
+    for (const r of existing) { await atDelete('PathwayRoles', r._atId); }
+    flowRoles = {};
+    // Recreate from defaults
+    for (const [k, v] of Object.entries(DEFAULT_FLOW_ROLES)) {
+      const step = +k;
+      const fields = {
+        'StepNumber': step,
+        'StepName':   PATHWAY_STEPS.find(p => p.step === step)?.core || '',
+        'Leads':      v.leads.join('|'),
+        'Supports':   v.supports.join('|')
+      };
+      const rec = await atCreate('PathwayRoles', fields);
+      flowRoles[step] = { _atId: rec.id, leads: [...v.leads], supports: [...v.supports] };
+    }
+    if (document.getElementById('page-flow').classList.contains('active')) renderFlow();
+    if (document.getElementById('page-pathway').classList.contains('active')) renderPathway();
+    toast('Roles reset to defaults ✓');
+  } catch (e) { toast('⚠ Reset failed: ' + e.message); }
+  setLoading(false);
+}
+
+// ─── DATA LAYER — PAINS & GAINS ──────────────────────────────────────────────
+
+async function addPainGain() {
+  const role = document.getElementById('pg-role-template').value;
+  const pain = document.getElementById('pg-pain').value.trim();
+  const gain = document.getElementById('pg-gain').value.trim();
+  if (!role)           { toast('Please select a role'); return; }
+  if (!pain && !gain)  { toast('Enter at least a pain or gain'); return; }
+
+  setLoading(true, 'Saving entry…');
+  try {
+    const fields = {
+      'StakeholderName': role,
+      'Pain': pain,
+      'Gain': gain
+    };
+    const rec = await atCreate('PainsGains', fields);
+    painGains.push({ _atId: rec.id, id: rec.id,
+      stakeholderId: role, stakeholderName: role, stakeholderOrg: '',
+      pain, gain });
+    document.getElementById('pg-pain').value = '';
+    document.getElementById('pg-gain').value = '';
+    document.getElementById('pg-role-template').value = '';
+    toast('Entry saved ✓');
+    renderPains();
+  } catch (e) { toast('⚠ Save failed: ' + e.message); }
+  setLoading(false);
+}
+
+async function deletePG(sid) {
+  if (!confirm('Remove all pain/gain entries for this stakeholder?')) return;
+  setLoading(true, 'Deleting…');
+  try {
+    const toDelete = painGains.filter(p => p.stakeholderId === sid);
+    for (const p of toDelete) { await atDelete('PainsGains', p._atId); }
+    painGains = painGains.filter(p => p.stakeholderId !== sid);
+    renderPains();
+    toast('Entries removed');
+  } catch (e) { toast('⚠ Delete failed: ' + e.message); }
+  setLoading(false);
+}
+
+// ─── EXPORT ──────────────────────────────────────────────────────────────────
+
+function exportCSV() {
+  if (!stakeholders.length) { toast('No data to export'); return; }
+  const headers = ['Organisation','Name','Title','Role','Indication','Impact','Influence','Advocacy','Steps','Interests','Strategy','Notes'];
+  const rows = stakeholders.map(s => {
+    const steps = Array.isArray(s.steps) ? s.steps.join(';') : (s.step || '');
+    return [s.org,s.name,s.title||'',s.role,s.indication,s.impact,s.influence,s.advocacy,steps,s.interests,s.strategy,s.notes]
+      .map(v => `"${(v||'').replace(/"/g,'""')}"`).join(',');
+  });
+  const csv = [headers.join(','), ...rows].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'stakeholder_register.csv';
+  a.click();
+  toast('CSV exported');
+}
+
+// ─── NAVIGATION ─────────────────────────────────────────────────────────────
+
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (id === 'dashboard') renderDashboard();
+  if (id === 'register') { renderRegister(); if (!document.getElementById('f-edit-id').value) renderStepCheckboxes([]); }
+  if (id === 'pathway')  renderPathway();
+  if (id === 'quadrant') renderQuadrant();
+  if (id === 'pains')    renderPains();
+  if (id === 'flow')     renderFlow();
+}
+
+// ─── TOAST ───────────────────────────────────────────────────────────────────
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ─── BADGES ─────────────────────────────────────────────────────────────────
+
+function impactBadge(v) {
+  if (!v) return '';
+  const cls = { High:'badge-high', Medium:'badge-medium', Low:'badge-low' }[v] || '';
+  return `<span class="badge ${cls}">${v}</span>`;
+}
+function indicationBadge(v) {
+  if (!v) return '';
+  const cls = { RA:'badge-ra', PsA:'badge-psa', 'Plaque Psoriasis':'badge-pp', 'Multiple / All':'badge-all' }[v] || '';
+  return `<span class="badge ${cls}">${v}</span>`;
+}
+function advocacyBadge(v) {
+  if (!v) return '';
+  const cls = {
+    Unaware:  'badge-unaware',
+    Aware:    'badge-neutral',
+    Interest: 'badge-interested',
+    Trial:    'badge-supportive',
+    Expand:   'badge-expand',
+    Advocacy: 'badge-advocate'
+  }[v] || '';
+  return `<span class="badge ${cls}">${v}</span>`;
+}
+
+// ─── STEP CHECKBOXES ─────────────────────────────────────────────────────────
+
+const STEP_LABELS = [
+  '1 – Recognition & referral','2 – Specialist triage','3 – First specialist consultation',
+  '4 – Diagnostic confirmation','5 – First-line treatment','6 – Monitoring response',
+  '7 – Advanced therapy eligibility','8 – Biologic selection','9 – Pre-biologic screening',
+  '10 – Biologic initiation','11 – Follow-up monitoring','12 – Treatment optimisation',
+  '13 – Formulary positioning'
+];
+
+function renderStepCheckboxes(selectedSteps) {
+  const sel = Array.isArray(selectedSteps) ? selectedSteps.map(String) : (selectedSteps ? [String(selectedSteps)] : []);
+  const grid = document.getElementById('f-steps-grid');
+  if (!grid) return;
+  grid.innerHTML = STEP_LABELS.map((label, i) => {
+    const num = String(i + 1);
+    const checked = sel.includes(num);
+    return `<label class="step-cb-item${checked ? ' checked' : ''}" id="scb-${num}">
+      <input type="checkbox" value="${num}" ${checked ? 'checked' : ''} onchange="toggleStepCb(this)">
+      <span class="step-num-badge">${num}</span>
+      <span>${label.replace(/^\d+ – /, '')}</span>
+    </label>`;
+  }).join('');
+}
+
+function toggleStepCb(cb) { cb.closest('label').classList.toggle('checked', cb.checked); }
+
+function getSelectedSteps() {
+  return Array.from(document.querySelectorAll('#f-steps-grid input[type=checkbox]:checked')).map(cb => cb.value);
+}
+
+// ─── REGISTER FORM ───────────────────────────────────────────────────────────
+
+function clearRegForm() {
+  ['f-org','f-name','f-title','f-interests','f-strategy','f-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-edit-id').value = '';
+  document.getElementById('f-role').value = '';
+  document.getElementById('f-role-other').value = '';
+  document.getElementById('f-role-other').style.display = 'none';
+  document.getElementById('f-edit-id').value = '';
+  document.getElementById('f-indication').value = 'RA';
+  document.getElementById('f-impact').value = 'High';
+  document.getElementById('f-influence').value = 'High';
+  document.getElementById('f-advocacy').value = 'Unaware';
+  document.getElementById('reg-form-title').textContent = 'Add Stakeholder';
+  document.getElementById('reg-save-btn').textContent = '➕ Add Stakeholder';
+  document.getElementById('reg-cancel-btn').style.display = 'none';
+  renderStepCheckboxes([]);
+}
+
+function editStakeholder(id) {
+  const s = stakeholders.find(st => st._atId === id);
+  if (!s) return;
+  document.getElementById('f-org').value       = s.org || '';
+  document.getElementById('f-name').value      = s.name || '';
+  document.getElementById('f-title').value     = s.title || '';
+
+  // Set role — if stored value matches a preset option use it, else set Other + free text
+  const roleSelect = document.getElementById('f-role');
+  const roleOther  = document.getElementById('f-role-other');
+  const knownRoles = ['Consultant', 'GP', 'Nurse', 'Pharmacist'];
+  if (knownRoles.includes(s.role)) {
+    roleSelect.value      = s.role;
+    roleOther.style.display = 'none';
+    roleOther.value       = '';
+  } else if (s.role) {
+    roleSelect.value      = 'Other';
+    roleOther.style.display = 'block';
+    roleOther.value       = s.role;
+  } else {
+    roleSelect.value      = '';
+    roleOther.style.display = 'none';
+    roleOther.value       = '';
+  }
+  document.getElementById('f-indication').value= s.indication || 'RA';
+  document.getElementById('f-impact').value    = s.impact || 'High';
+  document.getElementById('f-influence').value = s.influence || 'High';
+  document.getElementById('f-advocacy').value  = s.advocacy || 'Unaware';
+  document.getElementById('f-interests').value = s.interests || '';
+  document.getElementById('f-strategy').value  = s.strategy || '';
+  document.getElementById('f-notes').value     = s.notes || '';
+  document.getElementById('f-edit-id').value   = id;
+  const steps = Array.isArray(s.steps) ? s.steps : (s.step ? [String(s.step)] : []);
+  renderStepCheckboxes(steps);
+  document.getElementById('reg-form-title').textContent = `Editing: ${s.name || s.role}`;
+  document.getElementById('reg-save-btn').textContent   = '💾 Save Changes';
+  document.getElementById('reg-cancel-btn').style.display = 'inline-flex';
+  document.getElementById('page-register').querySelector('.card').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function cancelEditStakeholder() { clearRegForm(); }
+
+// ─── REGISTER TABLE ──────────────────────────────────────────────────────────
+
+function renderStepFilterPills() {
+  const container = document.getElementById('filter-steps-pills');
+  if (!container) return;
+  container.innerHTML = PATHWAY_STEPS.map(s =>
+    `<span class="step-filter-pill${selectedStepFilters.has(String(s.step)) ? ' active' : ''}"
+      onclick="toggleStepFilter('${s.step}')" title="${s.core}">
+      ${s.step}
+    </span>`
+  ).join('');
+  const clearBtn = document.getElementById('clear-step-filter');
+  if (clearBtn) clearBtn.style.display = selectedStepFilters.size > 0 ? 'inline-block' : 'none';
+}
+
+function toggleStepFilter(step) {
+  const key = String(step);
+  if (selectedStepFilters.has(key)) {
+    selectedStepFilters.delete(key);
+  } else {
+    selectedStepFilters.add(key);
+  }
+  renderStepFilterPills();
+  renderRegister();
+}
+
+function clearStepFilter() {
+  selectedStepFilters.clear();
+  renderStepFilterPills();
+  renderRegister();
+}
+
+function renderRegister() {
+  if (!document.getElementById('f-steps-grid').children.length) renderStepCheckboxes([]);
+  renderStepFilterPills();
+
+  const fi   = document.getElementById('filter-indication').value;
+  const fim  = document.getElementById('filter-impact').value;
+  const fa   = document.getElementById('filter-advocacy').value;
+  const fs   = document.getElementById('filter-search').value.toLowerCase();
+  const forg = document.getElementById('filter-org').value.toLowerCase();
+  const frole= document.getElementById('filter-role').value;
+
+  const filtered = stakeholders.filter(s => {
+    if (fi    && s.indication !== fi)  return false;
+    if (fim   && s.impact !== fim)     return false;
+    if (fa    && s.advocacy !== fa)    return false;
+    if (forg  && !(s.org||'').toLowerCase().includes(forg)) return false;
+    // Role filter — match known roles directly, "Other" matches anything not in the known list
+    if (frole) {
+      const knownRoles = ['Consultant','GP','Nurse','Pharmacist'];
+      if (frole === 'Other') {
+        if (knownRoles.includes(s.role)) return false;
+      } else {
+        if (s.role !== frole) return false;
+      }
+    }
+    if (fs    && ![s.org,s.name,s.role,s.interests].join(' ').toLowerCase().includes(fs)) return false;
+    // Step filter — show stakeholder if any of their steps are in the selected set
+    if (selectedStepFilters.size > 0) {
+      const stkSteps = Array.isArray(s.steps) ? s.steps : (s.step ? [String(s.step)] : []);
+      const hasMatch = stkSteps.some(st => selectedStepFilters.has(String(st)));
+      if (!hasMatch) return false;
+    }
+    return true;
+  });
+
+  const tbody = document.getElementById('register-tbody');
+  document.getElementById('register-count').textContent =
+    `${stakeholders.length} stakeholder${stakeholders.length !== 1 ? 's' : ''} recorded`;
+
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="11"><div class="empty-state"><div class="empty-state-icon">👥</div><h3>No stakeholders yet</h3><p>Add your first stakeholder using the form above</p></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(s => {
+    const steps = Array.isArray(s.steps) ? s.steps : (s.step ? [String(s.step)] : []);
+    const stepsBadges = steps.length
+      ? steps.sort((a,b)=>+a-+b).map(n=>`<span style="background:var(--ucb-blue-25);color:#001489;padding:2px 7px;border-radius:2px;font-size:11px;font-weight:700;margin:1px;display:inline-block;">${n}</span>`).join('')
+      : '<span style="color:var(--slate-light);font-size:12px;">—</span>';
+    return `<tr>
+      <td>${s.org||'—'}</td><td><strong>${s.name||'—'}</strong></td>
+      <td style="font-size:12px">${s.title||'—'}</td>
+      <td style="font-size:12px">${s.role}</td>
+      <td>${indicationBadge(s.indication)}</td>
+      <td>${impactBadge(s.impact)}</td><td>${impactBadge(s.influence)}</td>
+      <td>${advocacyBadge(s.advocacy)}</td>
+      <td style="white-space:nowrap">${stepsBadges}</td>
+      <td style="font-size:12px;max-width:180px">${s.interests||'—'}</td>
+      <td><div style="display:flex;gap:6px;">
+        <button class="btn btn-outline btn-sm" onclick="editStakeholder('${s._atId}')" title="Edit">✏</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteStakeholder('${s._atId}')" title="Delete">✕</button>
+      </div></td></tr>`;
+  }).join('');
+}
+
+// ─── PATHWAY MAP ─────────────────────────────────────────────────────────────
+
+function renderPathway() {
+  const cont = document.getElementById('pathway-steps');
+  cont.innerHTML = PATHWAY_STEPS.map(s => {
+    const roles = flowRoles[s.step] || { leads:[], supports:[] };
+    const leadHtml = roles.leads.map(r=>`<span class="cpw-role-pill lead" style="margin:2px 2px 2px 0;">${r}</span>`).join('')
+      || '<span style="font-size:12px;color:var(--slate-light);">—</span>';
+    const suppHtml = roles.supports.map(r=>`<span class="cpw-role-pill support" style="margin:2px 2px 2px 0;">${r}</span>`).join('')
+      || '<span style="font-size:12px;color:var(--slate-light);">—</span>';
+    return `<div class="pathway-step">
+      <div class="ps-cell"><div class="ps-num">${s.step}</div></div>
+      <div class="ps-cell"><strong style="font-size:13px">${s.core}</strong></div>
+      <div class="ps-cell"><span class="badge badge-ra" style="margin-bottom:4px;display:inline-block">Rheumatoid Arthritis (RA)</span><br><span style="font-size:12px">${s.ra}</span></div>
+      <div class="ps-cell"><span class="badge badge-psa" style="margin-bottom:4px;display:inline-block">Psoriatic Arthritis (PsA)</span><br><span style="font-size:12px">${s.psa}</span></div>
+      <div class="ps-cell"><span class="badge badge-pp" style="margin-bottom:4px;display:inline-block">PP</span><br><span style="font-size:12px">${s.pp}</span></div>
+      <div class="ps-cell" style="vertical-align:top;">${leadHtml}</div>
+      <div class="ps-cell" style="vertical-align:top;">${suppHtml}</div>
+      <div class="ps-cell" style="display:flex;align-items:center;justify-content:center;">
+        <button class="cpw-step-edit-btn" onclick="openEditModal(${s.step})" title="Edit roles" style="border-radius:8px;">✏</button>
+      </div></div>`;
+  }).join('');
+
+  const stepMap = {};
+  stakeholders.forEach(s => {
+    const steps = Array.isArray(s.steps) ? s.steps : (s.step ? [String(s.step)] : []);
+    steps.forEach(st => { if (!stepMap[st]) stepMap[st]=[]; stepMap[st].push(s); });
+  });
+
+  const cont2 = document.getElementById('step-stakeholders');
+  const steps2 = Object.keys(stepMap).sort((a,b)=>+a-+b);
+  if (!steps2.length) {
+    cont2.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📍</div><h3>No stakeholders mapped</h3><p>Add stakeholders and assign them to pathway steps in the Stakeholders tab</p></div>`;
+    return;
+  }
+  cont2.innerHTML = steps2.map(step => {
+    const info = PATHWAY_STEPS.find(p=>p.step==step);
+    return `<div style="margin-bottom:16px;border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+      <div style="background:var(--slate);padding:10px 16px;display:flex;align-items:center;gap:12px;">
+        <div class="ps-num" style="width:28px;height:28px;font-size:12px;">${step}</div>
+        <span style="color:white;font-size:13px;font-weight:600;">${info?info.core:'Step '+step}</span>
+      </div>
+      <div style="padding:12px 16px;display:flex;flex-wrap:wrap;gap:10px;">
+        ${stepMap[step].map(s=>`<div style="background:var(--ucb-blue-25);border:1px solid var(--ucb-blue-50);border-radius:2px;padding:8px 14px;font-size:12px;">
+          <div style="font-weight:700;color:var(--slate)">${s.name||s.role}</div>
+          <div style="color:var(--slate-light)">${s.org} · ${indicationBadge(s.indication)}</div>
+        </div>`).join('')}
+      </div></div>`;
+  }).join('');
+}
+
+// ─── QUADRANT ────────────────────────────────────────────────────────────────
+
+let quadChart = null;
+
+function renderQuadrant() {
+  const canvas = document.getElementById('quadrant-canvas');
+  const ctx = canvas.getContext('2d');
+  if (quadChart) quadChart.destroy();
+  const score = v => ({High:3,Medium:2,Low:1}[v]||0);
+  const datasets = stakeholders.map(s => {
+    const imp=score(s.impact), inf=score(s.influence);
+    let color='#bbb';
+    if (imp===3&&inf===3) color='#C0444A';
+    else if (imp>=2&&inf>=2) color='#E8943A';
+    else if (imp>=2||inf>=2) color='#001489';
+    return { label:(s.name||s.role)+' ('+s.org+')', data:[{x:inf,y:imp}], backgroundColor:color+'CC', borderColor:color, borderWidth:2, pointRadius:14, pointHoverRadius:17 };
+  });
+  const quadrantPlugin = { id:'quadrant', beforeDraw(chart) {
+    const {ctx,chartArea:{left,top,right,bottom,width,height}}=chart;
+    const mx=left+width/2,my=top+height/2;
+    ctx.save(); ctx.strokeStyle='#D0DCE8'; ctx.lineWidth=1.5; ctx.setLineDash([6,4]);
+    ctx.beginPath();ctx.moveTo(mx,top);ctx.lineTo(mx,bottom);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(left,my);ctx.lineTo(right,my);ctx.stroke();
+    ctx.setLineDash([]); ctx.fillStyle='rgba(0,0,0,0.03)'; ctx.fillRect(mx,top,right-mx,my-top);
+    ctx.font='11px Exo 2,sans-serif'; ctx.fillStyle='#5B7898';
+    ctx.fillText('HIGH IMPACT / HIGH INFLUENCE',mx+8,top+16);
+    ctx.fillText('LOW IMPACT / HIGH INFLUENCE',mx+8,my+16);
+    ctx.fillText('HIGH IMPACT / LOW INFLUENCE',left+8,top+16);
+    ctx.fillText('LOW IMPACT / LOW INFLUENCE',left+8,my+16);
+    ctx.restore();
+  }};
+  quadChart = new Chart(ctx,{type:'scatter',data:{datasets},options:{animation:{duration:600},
+    scales:{x:{min:.5,max:3.5,ticks:{callback:v=>({1:'Low',2:'Medium',3:'High'}[v]||''),stepSize:1},title:{display:true,text:'INFLUENCE',font:{size:12,weight:'bold'}},grid:{display:false}},
+            y:{min:.5,max:3.5,ticks:{callback:v=>({1:'Low',2:'Medium',3:'High'}[v]||''),stepSize:1},title:{display:true,text:'IMPACT',font:{size:12,weight:'bold'}},grid:{display:false}}},
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const s=stakeholders.find(st=>((st.name||st.role)+' ('+st.org+')')===c.dataset.label);return s?[c.dataset.label,`Impact: ${s.impact} · Influence: ${s.influence}`,`Advocacy: ${s.advocacy}`]:[c.dataset.label];}}}}},
+    plugins:[quadrantPlugin]});
+}
+
+// ─── PAINS & GAINS TEMPLATES ─────────────────────────────────────────────────
+
+const PG_TEMPLATES = {
+  Consultant: {
+    pain: `• Delays in biologic initiation due to funding approvals and pathway complexity
+• Administrative burden linked to Blueteq / IFR / HCD processes
+• Limited visibility of medication adherence and optimisation between visits
+• Capacity constraints due to managing both complex and stable patients`,
+    gain: `• Streamlined biologic approval and initiation processes
+• Pharmacist-led optimisation and safety monitoring
+• Reduced administrative burden via HCD pharmacist support
+• Ability to focus on complex, refractory, or diagnostic cases`
+  },
+  Nurse: {
+    pain: `• Time-intensive biologic education and onboarding processes
+• Managing patient queries on side effects, often duplicating pharmacist input
+• Coordination burden across MDT for initiation and follow-up
+• High volume of stable patients requiring routine follow-up`,
+    gain: `• Shared responsibility with pharmacist for biologic counselling and support
+• Clear escalation pathways for adverse effects and adherence issues
+• Reduced duplication through defined MDT roles
+• More capacity for disease management and patient support`
+  },
+  Pharmacist: {
+    pain: `• High administrative workload (Blueteq, prior approvals, funding pathways)
+• Fragmented data across systems (hospital, commissioning, primary care)
+• Limited early involvement in pathway (often engaged late at prescribing stage)
+• Variability in prescribing practices impacting cost-effectiveness`,
+    gain: `• Central role in biologic and HCD governance and pathway standardisation
+• Ability to optimise therapy selection based on cost, formulary, and outcomes
+• Improved data visibility for tracking usage, outcomes, and spend
+• Proactive involvement in switching programmes (e.g. biosimilars) and optimisation`
+  },
+  GP: {
+    pain: `• Limited understanding of biologic pathways and HCD processes
+• Responsibility for shared care prescribing without full confidence
+• Communication gaps regarding treatment changes from secondary care
+• Monitoring burden without clear ownership`,
+    gain: `• Clear shared care agreements and defined responsibilities
+• Reduced burden as secondary care retains HCD prescribing control
+• Better communication on treatment plans and monitoring requirements
+• Support from specialists and pharmacists for medication queries`
+  },
+  Radiologist: {
+    pain: `• Requests lacking sufficient clinical detail to guide appropriate imaging
+• High demand for imaging in suspected inflammatory conditions
+• Repeat or unnecessary imaging due to unclear pathways
+• Pressure on turnaround impacting diagnostic timelines`,
+    gain: `• Standardised imaging requests aligned with referral criteria
+• Improved clinical information enabling better interpretation
+• Reduced duplication through clearer diagnostic pathways`
+  }
+};
+
+function applyPGTemplate(role) {
+  if (!role || !PG_TEMPLATES[role]) return;
+  const t = PG_TEMPLATES[role];
+  document.getElementById('pg-pain').value = t.pain;
+  document.getElementById('pg-gain').value = t.gain;
+}
+
+function clearPGForm() {
+  document.getElementById('pg-role-template').value = '';
+  document.getElementById('pg-pain').value = '';
+  document.getElementById('pg-gain').value = '';
+}
+
+// ─── PAINS & GAINS ───────────────────────────────────────────────────────────
+
+function updatePGDropdown() {
+  // pg-stakeholder removed — pains & gains now grouped by role only
+}
+
+function renderPains() {
+  const cont = document.getElementById('pg-cards-container');
+
+  if (!painGains.length) {
+    cont.innerHTML = `<div class="card"><div class="empty-state"><div class="empty-state-icon">💡</div><h3>No entries yet</h3><p>Select a role above and save pains and gains to see them here</p></div></div>`;
+    return;
+  }
+
+  // Role display labels
+  const roleLabels = {
+    Consultant: 'Consultant (Rheumatologist)',
+    Nurse:      'Nurse (Specialist Rheumatology Nurse)',
+    Pharmacist: 'Pharmacist (Secondary Care / HCD)',
+    GP:         'GP (Primary Care Physician)',
+    Radiologist:'Radiologist'
+  };
+  const roleIcons = {
+    Consultant: '🩻', Nurse: '💉', Pharmacist: '💊', GP: '🏥', Radiologist: '📡'
+  };
+
+  // Group by role (stakeholderId now stores role key)
+  const grouped = {};
+  painGains.forEach(pg => {
+    const key = pg.stakeholderId || pg.stakeholderName || 'Other';
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(pg);
+  });
+
+  let html = '';
+  Object.entries(grouped).forEach(([role, entries]) => {
+    const label = roleLabels[role] || role;
+    const icon  = roleIcons[role]  || '👤';
+    const pains = entries.filter(e => e.pain);
+    const gains = entries.filter(e => e.gain);
+    html += `<div class="pg-card">
+      <div class="pg-header">
+        <div style="background:var(--ucb-blue-25);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">${icon}</div>
+        <div>
+          <div style="font-weight:700;color:var(--ucb-blue)">${label}</div>
+          <div style="font-size:12px;font-weight:400;color:var(--deep-gray)">${entries.length} entr${entries.length === 1 ? 'y' : 'ies'}</div>
+        </div>
+        <button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="deletePG('${role}')">✕ Remove</button>
+      </div>
+      <div class="pg-body">
+        <div class="pg-col">
+          <div class="pg-col-title">😣 Pains</div>
+          ${pains.map(e => `<div class="pg-item">${e.pain}</div>`).join('') || '<div class="pg-item" style="opacity:.5">None recorded</div>'}
+        </div>
+        <div class="pg-col">
+          <div class="pg-col-title">✨ Gains</div>
+          ${gains.map(e => `<div class="pg-item">${e.gain}</div>`).join('') || '<div class="pg-item" style="opacity:.5">None recorded</div>'}
+        </div>
+      </div>
+    </div>`;
+  });
+  cont.innerHTML = html;
+}
+
+// ─── DASHBOARD ───────────────────────────────────────────────────────────────
+
+let advChart = null;
+let indChart = null;
+
+function renderDashboard() {
+  const total=stakeholders.length, highHigh=stakeholders.filter(s=>s.impact==='High'&&s.influence==='High').length,
+    advocates=stakeholders.filter(s=>s.advocacy==='Advocacy').length,
+    orgs=new Set(stakeholders.map(s=>s.org).filter(Boolean)).size;
+  document.getElementById('stats-row').innerHTML=`
+    <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">Total Stakeholders</div></div>
+    <div class="stat-card rose"><div class="stat-num">${highHigh}</div><div class="stat-label">High Impact / High Influence</div></div>
+    <div class="stat-card green"><div class="stat-num">${advocates}</div><div class="stat-label">Advocacy stage</div></div>
+    <div class="stat-card amber"><div class="stat-num">${orgs}</div><div class="stat-label">Organisations</div></div>
+    <div class="stat-card purple"><div class="stat-num">${painGains.length}</div><div class="stat-label">Pain/Gain Entries</div></div>`;
+
+  const advLabels=['Unaware','Aware','Interest','Trial','Expand','Advocacy'];
+  const advCounts=advLabels.map(l=>stakeholders.filter(s=>s.advocacy===l).length);
+  const advCtx=document.getElementById('advocacyChart').getContext('2d');
+  if (advChart) advChart.destroy();
+  advChart=new Chart(advCtx,{type:'doughnut',data:{labels:advLabels,datasets:[{data:advCounts,backgroundColor:['#D0D3D4','#8089C4','#FFC658','#6BCABA','#387F97','#001489'],borderWidth:2,borderColor:'#fff'}]},options:{plugins:{legend:{position:'right',labels:{font:{family:'Exo 2',size:12},padding:12}}},cutout:'65%'}});
+
+  const indLabels=['RA','PsA','Plaque Psoriasis','Multiple / All'];
+  const indCounts=indLabels.map(l=>stakeholders.filter(s=>s.indication===l).length);
+  const indCtx=document.getElementById('indicationChart').getContext('2d');
+  if (indChart) indChart.destroy();
+  indChart=new Chart(indCtx,{type:'bar',data:{labels:indLabels,datasets:[{data:indCounts,backgroundColor:['#001489','#404FA6','#F18070','#FFC658'],borderRadius:6,borderSkipped:false}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1},grid:{color:'#f0f0f0'}},x:{grid:{display:false}}}}});
+
+  const priority=stakeholders.filter(s=>s.impact==='High'&&s.influence==='High');
+  const pList=document.getElementById('priority-list');
+  if (!priority.length){pList.innerHTML=`<div class="empty-state"><div class="empty-state-icon">🎯</div><h3>None yet</h3><p>Add stakeholders with High impact and High influence to see them here</p></div>`;return;}
+  pList.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Organisation</th><th>Indication</th><th>Advocacy</th><th>Strategy</th></tr></thead><tbody>
+    ${priority.map(s=>`<tr><td><strong>${s.name||'—'}</strong></td><td style="font-size:12px">${s.role}</td><td>${s.org}</td><td>${indicationBadge(s.indication)}</td><td>${advocacyBadge(s.advocacy)}</td><td style="font-size:12px">${s.strategy||'—'}</td></tr>`).join('')}
+  </tbody></table></div>`;
+}
+
+// ─── FLOW DIAGRAM ────────────────────────────────────────────────────────────
+
+const PHASES = [
+  { label:'Recognition & access', steps:[1,2], color:'#001489' },
+  { label:'Assessment & diagnosis', steps:[3,4], color:'#0066C8' },
+  { label:'Treatment initiation & monitoring', steps:[5,6], color:'#27387C' },
+  { label:'Advanced therapy pathway', steps:[7,8,9,10], color:'#1D3D62' },
+  { label:'Ongoing management', steps:[11,12], color:'#0A5C3A' },
+  { label:'System & formulary', steps:[13], color:'#3A4F63' }
+];
+
+const DEFAULT_FLOW_ROLES = {
+  1: {leads:['GP'],              supports:['Referral management service']},
+  2: {leads:['Nurse'],           supports:['Consultant']},
+  3: {leads:['Consultant'],      supports:['Nurse']},
+  4: {leads:['Consultant'],      supports:['MDT']},
+  5: {leads:['Consultant'],      supports:['Nurse']},
+  6: {leads:['Nurse'],           supports:['Consultant']},
+  7: {leads:['Consultant'],      supports:['MDT']},
+  8: {leads:['Consultant'],      supports:['Pharmacist']},
+  9: {leads:['Nurse'],           supports:['Pharmacist']},
+  10:{leads:['Nurse'],           supports:['Homecare provider']},
+  11:{leads:['Consultant'],      supports:['Nurse']},
+  12:{leads:['Consultant'],      supports:['MDT']},
+  13:{leads:['Pharmacist'],      supports:['Medicines optimisation team']}
+};
+
+function renderFlow() {
+  const wrap=document.getElementById('cpw-wrap');
+  let html='', lastPhase=null;
+  let phaseForStep={};
+  PHASES.forEach(ph=>ph.steps.forEach(s=>phaseForStep[s]=ph));
+
+  PATHWAY_STEPS.forEach((s,idx)=>{
+    const ph=phaseForStep[s.step];
+    const roles=flowRoles[s.step]||{leads:[],supports:[]};
+    const stkHere=stakeholders.filter(st=>{
+      const stps=Array.isArray(st.steps)?st.steps:(st.step?[String(st.step)]:[]);
+      return stps.includes(String(s.step));
+    });
+    if (ph&&ph!==lastPhase) {
+      if (lastPhase!==null) html+=`<div class="cpw-arrow"></div>`;
+      html+=`<div class="cpw-phase-label" style="color:${ph.color}">${ph.label}</div>`;
+      lastPhase=ph;
+    }
+    if (idx>0&&ph===lastPhase&&!isNewPhase(s.step)) html+=`<div class="cpw-arrow" style="background:${ph?ph.color:'var(--teal)'};"></div>`;
+    const leadPills=roles.leads.map(r=>`<span class="cpw-role-pill lead">${r}</span>`).join('')+`<button class="cpw-role-add" onclick="openEditModal(${s.step})">+ Add</button>`;
+    const suppPills=roles.supports.map(r=>`<span class="cpw-role-pill support">${r}</span>`).join('')+`<button class="cpw-role-add" onclick="openEditModal(${s.step})">+ Add</button>`;
+    const stkChips=stkHere.length?`<div class="cpw-stakeholders-bar"><span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--slate-light);">Mapped</span>${stkHere.map(st=>`<span class="cpw-stkh-chip">${st.name||st.role}${st.org?' · '+st.org:''}</span>`).join('')}</div>`:'';
+    const phColor=ph?ph.color:'var(--teal)';
+    html+=`<div class="cpw-node" id="cpw-node-${s.step}" style="border-left:4px solid ${phColor};">
+      <div class="cpw-node-header">
+        <div class="cpw-step-num" style="background:${phColor};">${s.step}</div>
+        <div class="cpw-step-title">${s.core}</div>
+        <button class="cpw-step-edit-btn" onclick="openEditModal(${s.step})" title="Edit roles">✏</button>
+      </div>
+      <div class="cpw-roles">
+        <div class="cpw-role-block"><div class="cpw-role-label lead">Lead decision maker</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${leadPills}</div></div>
+        <div class="cpw-role-block"><div class="cpw-role-label support">Supporting roles</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${suppPills}</div></div>
+      </div>${stkChips}</div>`;
+    if (idx<PATHWAY_STEPS.length-1){const np=phaseForStep[PATHWAY_STEPS[idx+1].step];if(np===ph)html+=`<div class="cpw-arrow" style="background:${phColor};"></div>`;}
+  });
+  wrap.innerHTML=html;
+}
+
+function isNewPhase(stepNum){return PHASES.some(ph=>ph.steps[0]===stepNum);}
+
+// ─── FLOW EDIT MODAL ─────────────────────────────────────────────────────────
+
+let editingStep=null, editLeads=[], editSupports=[];
+
+function showFlowRoleOther(type, sel) {
+  const otherId = type === 'lead' ? 'cpw-lead-other' : 'cpw-support-other';
+  const other = document.getElementById(otherId);
+  if (sel.value === 'Other') {
+    other.style.display = 'block';
+    other.focus();
+  } else {
+    other.style.display = 'none';
+    other.value = '';
+  }
+}
+
+function getFlowRoleValue(type) {
+  const selId   = type === 'lead' ? 'cpw-lead-select'  : 'cpw-support-select';
+  const otherId = type === 'lead' ? 'cpw-lead-other'   : 'cpw-support-other';
+  const sel = document.getElementById(selId);
+  if (sel.value === 'Other') {
+    return document.getElementById(otherId).value.trim();
+  }
+  return sel.value;
+}
+
+function resetFlowRoleInputs(type) {
+  const selId   = type === 'lead' ? 'cpw-lead-select'  : 'cpw-support-select';
+  const otherId = type === 'lead' ? 'cpw-lead-other'   : 'cpw-support-other';
+  document.getElementById(selId).value = '';
+  document.getElementById(otherId).value = '';
+  document.getElementById(otherId).style.display = 'none';
+}
+
+function openEditModal(stepNum) {
+  const s = PATHWAY_STEPS.find(p => p.step === stepNum);
+  const roles = flowRoles[stepNum] || {leads:[], supports:[]};
+  editingStep = stepNum;
+  editLeads    = [...roles.leads];
+  editSupports = [...roles.supports];
+  document.getElementById('cpw-edit-title').textContent = `Step ${stepNum} — ${s.core}`;
+  document.getElementById('cpw-edit-sub').textContent   = 'Add or remove lead and supporting roles for this pathway step.';
+  document.getElementById('cpw-edit-step-id').value     = stepNum;
+  resetFlowRoleInputs('lead');
+  resetFlowRoleInputs('support');
+  renderEditTags();
+  document.getElementById('cpw-edit-overlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('cpw-lead-select').focus(), 100);
+}
+
+function renderEditTags() {
+  document.getElementById('cpw-edit-leads').innerHTML =
+    editLeads.map((r, i) => `<span class="cpw-tag-item lead">${r}<button onclick="removeEditRole('lead',${i})" title="Remove">×</button></span>`).join('') ||
+    '<span style="font-size:12px;color:var(--slate-light);">No lead roles yet</span>';
+  document.getElementById('cpw-edit-supports').innerHTML =
+    editSupports.map((r, i) => `<span class="cpw-tag-item support">${r}<button onclick="removeEditRole('support',${i})" title="Remove">×</button></span>`).join('') ||
+    '<span style="font-size:12px;color:var(--slate-light);">No supporting roles yet</span>';
+}
+
+function addFlowRole(type) {
+  const val = getFlowRoleValue(type);
+  if (!val) { toast('Please select or enter a role'); return; }
+  if (type === 'lead') {
+    if (!editLeads.includes(val)) editLeads.push(val);
+  } else {
+    if (!editSupports.includes(val)) editSupports.push(val);
+  }
+  resetFlowRoleInputs(type);
+  renderEditTags();
+}
+
+function removeEditRole(type, idx) {
+  if (type === 'lead') editLeads.splice(idx, 1); else editSupports.splice(idx, 1);
+  renderEditTags();
+}
+
+function closeEditModal() {
+  document.getElementById('cpw-edit-overlay').style.display = 'none';
+  editingStep = null;
+}
+
+function printFlow() {
+  const content=document.getElementById('cpw-wrap').innerHTML;
+  const win=window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><title>Rheumatology Pathway</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>body{font-family:'Exo 2',sans-serif;background:#fff;padding:32px;color:#0A2240;}h1{font-family:'Source Serif 4',serif;font-size:26px;margin-bottom:8px;}.cpw-wrap{display:flex;flex-direction:column;align-items:center;}.cpw-phase-label{width:100%;max-width:560px;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#5B7898;padding:14px 0 6px;display:flex;align-items:center;gap:10px;}.cpw-phase-label::after{content:'';flex:1;height:1px;background:#D0DCE8;}.cpw-node{width:100%;max-width:560px;background:white;border-radius:12px;border:1.5px solid #D0DCE8;page-break-inside:avoid;}.cpw-node-header{display:flex;align-items:center;border-bottom:1px solid #D0DCE8;}.cpw-step-num{width:52px;min-height:60px;color:white;display:flex;align-items:center;justify-content:center;font-family:'Source Serif 4',serif;font-size:22px;border-radius:10px 0 0 0;}.cpw-step-title{padding:14px 16px;flex:1;font-size:14px;font-weight:600;}.cpw-step-edit-btn{display:none;}.cpw-roles{display:grid;grid-template-columns:1fr 1fr;padding:12px 16px 14px;gap:10px;}.cpw-role-label{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-bottom:5px;}.cpw-role-label.lead{color:#001489;}.cpw-role-label.support{color:#5B7898;}.cpw-role-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500;margin:2px;}.cpw-role-pill.lead{background:var(--ucb-blue-25);color:#001489;border:1px solid #8089C4;}.cpw-role-pill.support{background:#f4f6f8;color:#1D3D62;border:1px solid #D0DCE8;}.cpw-role-add{display:none;}.cpw-arrow{width:2px;height:22px;margin:0 auto;position:relative;}.cpw-arrow::after{content:'';position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);border-left:5px solid transparent;border-right:5px solid transparent;border-top-width:7px;border-top-style:solid;}.cpw-stakeholders-bar{padding:8px 16px;border-top:1px solid #D0DCE8;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#F5F8FC;border-radius:0 0 10px 10px;}.cpw-stkh-chip{font-size:11px;padding:2px 8px;border-radius:10px;background:#001489;color:white;font-weight:600;}</style></head><body>
+  <h1>Rheumatology Clinical Pathway</h1><p style="color:#5B7898;font-size:13px;margin-bottom:28px;">13-step core rheumatology pathway with lead and supporting roles</p>
+  <div class="cpw-wrap">${content}</div></body></html>`);
+  win.document.close();
+  setTimeout(()=>win.print(),600);
+}
+
+function truncate(str,max){if(!str)return'';return str.length>max?str.slice(0,max-1)+'…':str;}
+
+// ─── LANDING PAGE ────────────────────────────────────────────────────────────
+
+function enterApp(area) {
+  if (area !== 'rheumatology') return; // only rheumatology active
+  document.getElementById('landing-page').style.display = 'none';
+  document.getElementById('app-shell').style.display = 'block';
+  document.getElementById('header-therapy-name').textContent = 'Rheumatology Pathway';
+  // Reset to flow tab as default landing page
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-flow').classList.add('active');
+  // Set Flow Diagram nav button as active (last button in nav)
+  const navBtns = document.querySelectorAll('nav button');
+  navBtns[navBtns.length - 1].classList.add('active');
+  renderFlow();
+}
+
+function goHome() {
+  document.getElementById('app-shell').style.display = 'none';
+  document.getElementById('landing-page').style.display = 'flex';
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+
+(async () => {
+  // Load data in background — UI shows landing page first
+  await loadAllData();
+  // Prep dropdowns and checkboxes ready for when user enters the app
+  updatePGDropdown();
+  renderStepCheckboxes([]);
+})();
+</script>
+</body>
+</html>
