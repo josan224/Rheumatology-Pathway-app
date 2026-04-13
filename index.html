@@ -2480,14 +2480,18 @@ function renderQuadrant() {
     },
     onClick:(evt, elements) => {
       if (!elements.length) return;
+      // Get the clicked stakeholder's position
       const datasetIdx = elements[0].datasetIndex;
-      const label = datasets[datasetIdx]?.label || '';
-      const s = qStakeholders.find(st => ((st.name||st.role)+' ('+st.org+')') === label);
-      if (!s) return;
+      const clickedLabel = datasets[datasetIdx]?.label || '';
+      const clicked = qStakeholders.find(st => ((st.name||st.role)+' ('+st.org+')') === clickedLabel);
+      if (!clicked) return;
+      // Find ALL stakeholders with the same impact & influence
+      const matches = qStakeholders.filter(s => s.impact === clicked.impact && s.influence === clicked.influence);
+      const posLabel = `${clicked.impact} Impact / ${clicked.influence} Influence`;
       openChartDrill(
-        s.name || s.role,
-        `${s.title ? s.title + ' · ' : ''}${s.role} · ${s.org}`,
-        [s]
+        posLabel,
+        `${matches.length} stakeholder${matches.length !== 1 ? 's' : ''} in this quadrant position`,
+        matches
       );
     }
   },
