@@ -909,6 +909,12 @@
       </div>
     </div>
 
+    <div class="card" style="margin-bottom:24px;">
+      <div class="card-title">Stakeholders by Pathway Phase</div>
+      <div class="card-sub">Mapped stakeholders across each clinical phase — <span style="color:#001489;font-weight:600;">click a bar to see stakeholders</span></div>
+      <canvas id="phaseChart" height="110"></canvas>
+    </div>
+
     <div class="card">
       <div class="card-title">Priority Stakeholders</div>
       <div class="card-sub">High impact & high influence — require closest engagement</div>
@@ -2273,21 +2279,25 @@ function clearRegForm() {
 
 function editStakeholder(id) {
   const s = stakeholders.find(st => st._atId === id);
-  if (!s) return;
+  if (!s) { toast('Stakeholder not found'); return; }
+
+  // Switch to Stakeholders page — 3rd nav button after reorder (Flow, Dashboard, Stakeholders...)
+  const navBtn = document.querySelector('nav button:nth-child(3)');
+  showPage('register', navBtn);
+
   // Set org — check if it matches a known option, else use Other + free text
   const orgSelect = document.getElementById('f-org-select');
   const orgOther  = document.getElementById('f-org');
   if (s.org) {
-    // Check if the org value exists as an option in the select
     const optionExists = Array.from(orgSelect.options).some(o => o.value === s.org);
     if (optionExists) {
-      orgSelect.value         = s.org;
-      orgOther.style.display  = 'none';
-      orgOther.value          = '';
+      orgSelect.value        = s.org;
+      orgOther.style.display = 'none';
+      orgOther.value         = '';
     } else {
-      orgSelect.value         = 'Other';
-      orgOther.style.display  = 'block';
-      orgOther.value          = s.org;
+      orgSelect.value        = 'Other';
+      orgOther.style.display = 'block';
+      orgOther.value         = s.org;
     }
   } else {
     orgSelect.value        = '';
@@ -2327,7 +2337,11 @@ function editStakeholder(id) {
   document.getElementById('reg-form-title').textContent = `Editing: ${s.name || s.role}`;
   document.getElementById('reg-save-btn').textContent   = '💾 Save Changes';
   document.getElementById('reg-cancel-btn').style.display = 'inline-flex';
-  document.getElementById('page-register').querySelector('.card').scrollIntoView({ behavior:'smooth', block:'start' });
+  // Scroll to form after a tick to ensure page is visible
+  setTimeout(() => {
+    const formCard = document.getElementById('page-register').querySelector('.card');
+    if (formCard) formCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 50);
 }
 
 function cancelEditStakeholder() { clearRegForm(); }
@@ -2800,7 +2814,7 @@ function openChartDrill(title, subtitle, stakeholderList) {
               </div>
             </div>
             <button class="btn btn-outline btn-sm"
-              onclick="closeChartDrill();showPage('register',document.querySelector('nav button:nth-child(2)'));setTimeout(()=>{const el=document.getElementById('filter-search');if(el){el.value='${(s.name||'').replace(/'/g,"\\'")}';renderRegister();}},100)"
+              onclick="closeChartDrill();showPage('register',document.querySelector('nav button:nth-child(3)'));setTimeout(()=>{const el=document.getElementById('filter-search');if(el){el.value='${(s.name||'').replace(/'/g,"\\'")}';renderRegister();}},100)"
               style="flex-shrink:0;font-size:11px;">View</button>
           </div>`).join('')}
       </div>`;
@@ -2817,8 +2831,9 @@ function closeChartDrill() {
 
 // ─── DASHBOARD ───────────────────────────────────────────────────────────────
 
-let advChart = null;
-let indChart = null;
+let advChart   = null;
+let indChart   = null;
+let phaseChart = null;
 
 function renderDashboard() {
   const stkFiltered = stakeholders.filter(s => stakeholderMatchesTrust(s));
@@ -2911,6 +2926,79 @@ function renderDashboard() {
         const label = indLabels[idx];
         const matches = stkFiltered.filter(s => s.indication === label);
         openChartDrill(`Indication: ${label}`, `${matches.length} stakeholder${matches.length !== 1 ? 's' : ''} mapped to this condition`, matches);
+      }
+    }
+  });
+
+  // ── PHASE CHART ────────────────────────────────────────────────────────────
+  const phaseCtx = document.getElementById('phaseChart').getContext('2d');
+  if (phaseChart) phaseChart.destroy();
+
+  // Build phase → steps mapping from PHASES constant
+  const phaseLabels  = PHASES.map(ph => ph.label);
+  const phaseColors  = PHASES.map(ph => ph.color);
+  const phaseCounts  = PHASES.map(ph => {
+    // Unique stakeholders who have at least one step in this phase
+    const stepsInPhase = ph.steps.map(String);
+    return stkFiltered.filter(s => {
+      const stps = Array.isArray(s.steps) ? s.steps : (s.step ? [String(s.step)] : []);
+      return stps.some(st => stepsInPhase.includes(String(st)));
+    }).length;
+  });
+  // Also store the actual stakeholder lists for drill-down
+  const phaseStakeholders = PHASES.map(ph => {
+    const stepsInPhase = ph.steps.map(String);
+    return stkFiltered.filter(s => {
+      const stps = Array.isArray(s.steps) ? s.steps : (s.step ? [String(s.step)] : []);
+      return stps.some(st => stepsInPhase.includes(String(st)));
+    });
+  });
+
+  document.getElementById('phaseChart').style.cursor = 'pointer';
+  phaseChart = new Chart(phaseCtx, {
+    type: 'bar',
+    data: {
+      labels: phaseLabels,
+      datasets: [{
+        data: phaseCounts,
+        backgroundColor: phaseColors.map(c => c + 'CC'),
+        borderColor: phaseColors,
+        borderWidth: 2,
+        borderRadius: 4,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: {
+          label: ctx => ` ${ctx.raw} stakeholder${ctx.raw !== 1 ? 's' : ''}`,
+          title: ctx => ctx[0].label
+        }}
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          ticks: { stepSize: 1, font: { family: 'Exo 2', size: 11 } },
+          grid: { color: '#f0f0f0' },
+          title: { display: true, text: 'Stakeholders mapped', font: { family: 'Exo 2', size: 11 } }
+        },
+        y: {
+          ticks: { font: { family: 'Exo 2', size: 12 }, color: '#4B4F54' },
+          grid: { display: false }
+        }
+      },
+      onClick: (evt, elements) => {
+        if (!elements.length) return;
+        const idx = elements[0].index;
+        const ph  = PHASES[idx];
+        const matches = phaseStakeholders[idx];
+        openChartDrill(
+          ph.label,
+          `${matches.length} stakeholder${matches.length !== 1 ? 's' : ''} mapped across steps ${ph.steps.join(', ')}`,
+          matches
+        );
       }
     }
   });
