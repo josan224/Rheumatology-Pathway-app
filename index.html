@@ -846,6 +846,23 @@
   flex-wrap: wrap;
 ">
   <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#001489;white-space:nowrap;">Filter by Trust</span>
+
+  <!-- Region quick-select -->
+  <select id="region-select" onchange="selectRegion(this.value)"
+    style="padding:6px 10px;border:1.5px solid var(--frame-gray);border-radius:2px;font-family:'Exo 2',sans-serif;font-size:13px;outline:none;background:white;color:var(--deep-gray);min-width:180px;">
+    <option value="">Filter by region...</option>
+    <option value="North East & Yorkshire">North East &amp; Yorkshire</option>
+    <option value="North West">North West</option>
+    <option value="Midlands">Midlands</option>
+    <option value="East of England">East of England</option>
+    <option value="London">London</option>
+    <option value="South East">South East</option>
+    <option value="South West">South West</option>
+    <option value="Wales">Wales</option>
+    <option value="Scotland">Scotland</option>
+    <option value="Northern Ireland">Northern Ireland</option>
+  </select>
+
   <div style="position:relative;flex:1;min-width:220px;max-width:420px;">
     <input
       type="text"
@@ -1266,6 +1283,19 @@
       </div>
 
       <div class="filter-row" style="flex-wrap:wrap;gap:8px;">
+        <select onchange="renderRegister()" id="filter-region">
+          <option value="">All Regions</option>
+          <option value="North East & Yorkshire">North East &amp; Yorkshire</option>
+          <option value="North West">North West</option>
+          <option value="Midlands">Midlands</option>
+          <option value="East of England">East of England</option>
+          <option value="London">London</option>
+          <option value="South East">South East</option>
+          <option value="South West">South West</option>
+          <option value="Wales">Wales</option>
+          <option value="Scotland">Scotland</option>
+          <option value="Northern Ireland">Northern Ireland</option>
+        </select>
         <input type="text" id="filter-org" placeholder="Filter by organisation..." oninput="renderRegister()" style="min-width:180px;">
         <select onchange="renderRegister()" id="filter-role">
           <option value="">All Roles</option>
@@ -2289,6 +2319,158 @@ function cancelEditStakeholder() { clearRegForm(); }
 
 // ─── REGISTER TABLE ──────────────────────────────────────────────────────────
 
+// ─── TRUST → REGION MAP ──────────────────────────────────────────────────────
+
+const TRUST_REGIONS = {
+  'Airedale NHS Foundation Trust':'North East & Yorkshire',
+  'Barnsley Hospital NHS Foundation Trust':'North East & Yorkshire',
+  'Bradford Teaching Hospitals NHS Foundation Trust':'North East & Yorkshire',
+  'Calderdale and Huddersfield NHS Foundation Trust':'North East & Yorkshire',
+  'City Hospitals Sunderland NHS Foundation Trust':'North East & Yorkshire',
+  'Gateshead Health NHS Foundation Trust':'North East & Yorkshire',
+  'Harrogate and District NHS Foundation Trust':'North East & Yorkshire',
+  'Hull University Teaching Hospitals NHS Trust':'North East & Yorkshire',
+  'Leeds Teaching Hospitals NHS Trust':'North East & Yorkshire',
+  'Mid Yorkshire Hospitals NHS Trust':'North East & Yorkshire',
+  'Newcastle upon Tyne Hospitals NHS Foundation Trust':'North East & Yorkshire',
+  'North Tees and Hartlepool NHS Foundation Trust':'North East & Yorkshire',
+  'Northern Lincolnshire and Goole NHS Foundation Trust':'North East & Yorkshire',
+  'Northumbria Healthcare NHS Foundation Trust':'North East & Yorkshire',
+  'Rotherham Doncaster and South Humber NHS Foundation Trust':'North East & Yorkshire',
+  'Sheffield Teaching Hospitals NHS Foundation Trust':'North East & Yorkshire',
+  'South Tees Hospitals NHS Foundation Trust':'North East & Yorkshire',
+  'York Teaching Hospital NHS Foundation Trust':'North East & Yorkshire',
+  "Alder Hey Children's NHS Foundation Trust":'North West',
+  'Blackpool Teaching Hospitals NHS Foundation Trust':'North West',
+  'Bolton NHS Foundation Trust':'North West',
+  'Central Manchester University Hospitals NHS Foundation Trust':'North West',
+  'Countess of Chester Hospital NHS Foundation Trust':'North West',
+  'Lancashire Teaching Hospitals NHS Foundation Trust':'North West',
+  'Mersey Care NHS Foundation Trust':'North West',
+  'Pennine Care NHS Foundation Trust':'North West',
+  'Salford Royal NHS Foundation Trust':'North West',
+  'Stockport NHS Foundation Trust':'North West',
+  'Tameside and Glossop Integrated Care NHS Foundation Trust':'North West',
+  'Warrington and Halton Hospitals NHS Foundation Trust':'North West',
+  'Wirral University Teaching Hospital NHS Foundation Trust':'North West',
+  'Wrightington Wigan and Leigh NHS Foundation Trust':'North West',
+  'Burton Hospitals NHS Foundation Trust':'Midlands',
+  'Coventry and Warwickshire Partnership NHS Trust':'Midlands',
+  'Derby Teaching Hospitals NHS Foundation Trust':'Midlands',
+  'George Eliot Hospital NHS Trust':'Midlands',
+  'Heart of England NHS Foundation Trust':'Midlands',
+  'Kettering General Hospital NHS Foundation Trust':'Midlands',
+  'Nottingham University Hospitals NHS Trust':'Midlands',
+  'Sandwell and West Birmingham Hospitals NHS Trust':'Midlands',
+  'Shrewsbury and Telford Hospital NHS Trust':'Midlands',
+  'University Hospitals Birmingham NHS Foundation Trust':'Midlands',
+  'University Hospitals of Leicester NHS Trust':'Midlands',
+  'University Hospitals of North Midlands NHS Trust':'Midlands',
+  'Walsall Healthcare NHS Trust':'Midlands',
+  'Worcestershire Acute Hospitals NHS Trust':'Midlands',
+  'Wye Valley NHS Trust':'Midlands',
+  'Bedfordshire Hospitals NHS Foundation Trust':'East of England',
+  'Cambridge University Hospitals NHS Foundation Trust':'East of England',
+  'Colchester Hospital University NHS Foundation Trust':'East of England',
+  'East and North Hertfordshire NHS Trust':'East of England',
+  'East Suffolk and North Essex NHS Foundation Trust':'East of England',
+  'Hertfordshire Community NHS Trust':'East of England',
+  'Hinchingbrooke Health Care NHS Trust':'East of England',
+  'Ipswich Hospital NHS Trust':'East of England',
+  'James Paget University Hospitals NHS Foundation Trust':'East of England',
+  'Luton and Dunstable University Hospital NHS Foundation Trust':'East of England',
+  'Norfolk and Norwich University Hospitals NHS Foundation Trust':'East of England',
+  'North West Anglia NHS Foundation Trust':'East of England',
+  'Princess Alexandra Hospital NHS Trust':'East of England',
+  'Queen Elizabeth Hospital Kings Lynn NHS Foundation Trust':'East of England',
+  'Southend University Hospital NHS Foundation Trust':'East of England',
+  'West Hertfordshire Hospitals NHS Trust':'East of England',
+  'West Suffolk NHS Foundation Trust':'East of England',
+  'Barking, Havering and Redbridge University Hospitals NHS Trust':'London',
+  'Barts Health NHS Trust':'London',
+  'Chelsea and Westminster Hospital NHS Foundation Trust':'London',
+  'Great Ormond Street Hospital for Children NHS Foundation Trust':'London',
+  "Guy's and St Thomas' NHS Foundation Trust":'London',
+  'Imperial College Healthcare NHS Trust':'London',
+  "King's College Hospital NHS Foundation Trust":'London',
+  'Kingston Hospital NHS Foundation Trust':'London',
+  'Lewisham and Greenwich NHS Trust':'London',
+  'London North West University Healthcare NHS Trust':'London',
+  'Moorfields Eye Hospital NHS Foundation Trust':'London',
+  'North Middlesex University Hospital NHS Trust':'London',
+  'Northwick Park Hospital':'London',
+  'Royal Free London NHS Foundation Trust':'London',
+  'Royal National Orthopaedic Hospital NHS Trust':'London',
+  'South London and Maudsley NHS Foundation Trust':'London',
+  "St George's University Hospitals NHS Foundation Trust":'London',
+  'University College London Hospitals NHS Foundation Trust':'London',
+  'Whittington Health NHS Trust':'London',
+  "Ashford and St Peter's Hospitals NHS Foundation Trust":'South East',
+  'Brighton and Sussex University Hospitals NHS Trust':'South East',
+  'Buckinghamshire Healthcare NHS Trust':'South East',
+  'East Kent Hospitals University NHS Foundation Trust':'South East',
+  'East Sussex Healthcare NHS Trust':'South East',
+  'Frimley Health NHS Foundation Trust':'South East',
+  'Hampshire Hospitals NHS Foundation Trust':'South East',
+  'Isle of Wight NHS Trust':'South East',
+  'Medway NHS Foundation Trust':'South East',
+  'Oxford University Hospitals NHS Foundation Trust':'South East',
+  'Portsmouth Hospitals NHS Trust':'South East',
+  'Royal Berkshire NHS Foundation Trust':'South East',
+  'Royal Surrey County Hospital NHS Foundation Trust':'South East',
+  'Surrey and Sussex Healthcare NHS Trust':'South East',
+  'Western Sussex Hospitals NHS Foundation Trust':'South East',
+  'Cornwall Partnership NHS Foundation Trust':'South West',
+  'Dorset County Hospital NHS Foundation Trust':'South West',
+  'Gloucestershire Hospitals NHS Foundation Trust':'South West',
+  'North Bristol NHS Trust':'South West',
+  'Royal Cornwall Hospitals NHS Trust':'South West',
+  'Royal Devon and Exeter NHS Foundation Trust':'South West',
+  'Royal United Hospitals Bath NHS Foundation Trust':'South West',
+  'Taunton and Somerset NHS Foundation Trust':'South West',
+  'University Hospitals Bristol and Weston NHS Foundation Trust':'South West',
+  'University Hospitals Plymouth NHS Trust':'South West',
+  'Weston Area Health NHS Trust':'South West',
+  'Yeovil District Hospital NHS Foundation Trust':'South West',
+  'Aneurin Bevan University Health Board':'Wales',
+  'Betsi Cadwaladr University Health Board':'Wales',
+  'Cardiff and Vale University Health Board':'Wales',
+  'Cwm Taf Morgannwg University Health Board':'Wales',
+  'Hywel Dda University Health Board':'Wales',
+  'Powys Teaching Health Board':'Wales',
+  'Swansea Bay University Health Board':'Wales',
+  'NHS Ayrshire and Arran':'Scotland',
+  'NHS Borders':'Scotland',
+  'NHS Dumfries and Galloway':'Scotland',
+  'NHS Fife':'Scotland',
+  'NHS Forth Valley':'Scotland',
+  'NHS Grampian':'Scotland',
+  'NHS Greater Glasgow and Clyde':'Scotland',
+  'NHS Highland':'Scotland',
+  'NHS Lanarkshire':'Scotland',
+  'NHS Lothian':'Scotland',
+  'NHS Orkney':'Scotland',
+  'NHS Shetland':'Scotland',
+  'NHS Tayside':'Scotland',
+  'NHS Western Isles':'Scotland',
+  'Belfast Health and Social Care Trust':'Northern Ireland',
+  'Northern Health and Social Care Trust':'Northern Ireland',
+  'South Eastern Health and Social Care Trust':'Northern Ireland',
+  'Southern Health and Social Care Trust':'Northern Ireland',
+  'Western Health and Social Care Trust':'Northern Ireland',
+};
+
+function getRegion(org) {
+  if (!org) return null;
+  if (TRUST_REGIONS[org]) return TRUST_REGIONS[org];
+  // Fuzzy match — first significant word
+  const key = org.toLowerCase();
+  for (const [trust, region] of Object.entries(TRUST_REGIONS)) {
+    if (key === trust.toLowerCase()) return region;
+  }
+  return null;
+}
+
 function renderStepFilterPills() {
   const container = document.getElementById('filter-steps-pills');
   if (!container) return;
@@ -2323,12 +2505,13 @@ function renderRegister() {
   if (!document.getElementById('f-steps-grid').children.length) renderStepCheckboxes([]);
   renderStepFilterPills();
 
-  const fi   = document.getElementById('filter-indication').value;
-  const fim  = document.getElementById('filter-impact').value;
-  const fa   = document.getElementById('filter-advocacy').value;
-  const fs   = document.getElementById('filter-search').value.toLowerCase();
-  const forg = document.getElementById('filter-org').value.toLowerCase();
-  const frole= document.getElementById('filter-role').value;
+  const fi     = document.getElementById('filter-indication').value;
+  const fim    = document.getElementById('filter-impact').value;
+  const fa     = document.getElementById('filter-advocacy').value;
+  const fs     = document.getElementById('filter-search').value.toLowerCase();
+  const forg   = document.getElementById('filter-org').value.toLowerCase();
+  const frole  = document.getElementById('filter-role').value;
+  const fregion= document.getElementById('filter-region') ? document.getElementById('filter-region').value : '';
 
   const filtered = stakeholders.filter(s => {
     if (!stakeholderMatchesTrust(s)) return false;
@@ -2336,21 +2519,16 @@ function renderRegister() {
     if (fim   && s.impact !== fim)     return false;
     if (fa    && s.advocacy !== fa)    return false;
     if (forg  && !(s.org||'').toLowerCase().includes(forg)) return false;
-    // Role filter — match known roles directly, "Other" matches anything not in the known list
     if (frole) {
       const knownRoles = ['Consultant','GP','Nurse','Pharmacist'];
-      if (frole === 'Other') {
-        if (knownRoles.includes(s.role)) return false;
-      } else {
-        if (s.role !== frole) return false;
-      }
+      if (frole === 'Other') { if (knownRoles.includes(s.role)) return false; }
+      else { if (s.role !== frole) return false; }
     }
+    if (fregion && getRegion(s.org) !== fregion) return false;
     if (fs    && ![s.org,s.name,s.role,s.interests].join(' ').toLowerCase().includes(fs)) return false;
-    // Step filter — show stakeholder if any of their steps are in the selected set
     if (selectedStepFilters.size > 0) {
       const stkSteps = Array.isArray(s.steps) ? s.steps : (s.step ? [String(s.step)] : []);
-      const hasMatch = stkSteps.some(st => selectedStepFilters.has(String(st)));
-      if (!hasMatch) return false;
+      if (!stkSteps.some(st => selectedStepFilters.has(String(st)))) return false;
     }
     return true;
   });
@@ -3041,6 +3219,198 @@ function printFlow() {
 
 function truncate(str,max){if(!str)return'';return str.length>max?str.slice(0,max-1)+'…':str;}
 
+// ─── REGION → TRUST MAPPING ──────────────────────────────────────────────────
+
+const TRUST_REGIONS = {
+  'North East & Yorkshire': [
+    'Airedale NHS Foundation Trust',
+    'Barnsley Hospital NHS Foundation Trust',
+    'Bradford Teaching Hospitals NHS Foundation Trust',
+    'Calderdale and Huddersfield NHS Foundation Trust',
+    'City Hospitals Sunderland NHS Foundation Trust',
+    'County Durham and Darlington NHS Foundation Trust',
+    'Gateshead Health NHS Foundation Trust',
+    'Harrogate and District NHS Foundation Trust',
+    'Hull University Teaching Hospitals NHS Trust',
+    'Leeds Teaching Hospitals NHS Trust',
+    'Mid Yorkshire Hospitals NHS Trust',
+    'Newcastle upon Tyne Hospitals NHS Foundation Trust',
+    'North Tees and Hartlepool NHS Foundation Trust',
+    'Northern Lincolnshire and Goole NHS Foundation Trust',
+    'Northumbria Healthcare NHS Foundation Trust',
+    'Rotherham Doncaster and South Humber NHS Foundation Trust',
+    'Sheffield Teaching Hospitals NHS Foundation Trust',
+    'South Tees Hospitals NHS Foundation Trust',
+    'York Teaching Hospital NHS Foundation Trust',
+  ],
+  'North West': [
+    'Alder Hey Children\'s NHS Foundation Trust',
+    'Blackpool Teaching Hospitals NHS Foundation Trust',
+    'Bolton NHS Foundation Trust',
+    'East Cheshire NHS Trust',
+    'Lancashire Teaching Hospitals NHS Foundation Trust',
+    'Manchester University NHS Foundation Trust',
+    'Mersey Care NHS Foundation Trust',
+    'Pennine Care NHS Foundation Trust',
+    'Salford Royal NHS Foundation Trust',
+    'Stockport NHS Foundation Trust',
+    'Tameside and Glossop Integrated Care NHS Foundation Trust',
+    'Warrington and Halton Teaching Hospitals NHS Foundation Trust',
+    'Wirral University Teaching Hospital NHS Foundation Trust',
+    'Wrightington Wigan and Leigh NHS Foundation Trust',
+  ],
+  'Midlands': [
+    'Burton Hospitals NHS Foundation Trust',
+    'Coventry and Warwickshire Partnership NHS Trust',
+    'Derby Teaching Hospitals NHS Foundation Trust',
+    'George Eliot Hospital NHS Trust',
+    'Heart of England NHS Foundation Trust',
+    'Kettering General Hospital NHS Foundation Trust',
+    'Nottingham University Hospitals NHS Trust',
+    'Sandwell and West Birmingham NHS Trust',
+    'Shrewsbury and Telford Hospital NHS Trust',
+    'University Hospitals Birmingham NHS Foundation Trust',
+    'University Hospitals of Leicester NHS Trust',
+    'University Hospitals of North Midlands NHS Trust',
+    'Walsall Healthcare NHS Trust',
+    'Worcestershire Acute Hospitals NHS Trust',
+    'Wye Valley NHS Trust',
+  ],
+  'East of England': [
+    'Bedfordshire Hospitals NHS Foundation Trust',
+    'Cambridge University Hospitals NHS Foundation Trust',
+    'Colchester Hospital University NHS Foundation Trust',
+    'East and North Hertfordshire NHS Trust',
+    'East Suffolk and North Essex NHS Foundation Trust',
+    'Hertfordshire Community NHS Trust',
+    'Hinchingbrooke Health Care NHS Trust',
+    'Ipswich Hospital NHS Trust',
+    'James Paget University Hospitals NHS Foundation Trust',
+    'Luton and Dunstable University Hospital NHS Foundation Trust',
+    'Norfolk and Norwich University Hospitals NHS Foundation Trust',
+    'North West Anglia NHS Foundation Trust',
+    'Princess Alexandra Hospital NHS Trust',
+    'Queen Elizabeth Hospital King\'s Lynn NHS Foundation Trust',
+    'Southend University Hospital NHS Foundation Trust',
+    'West Hertfordshire Hospitals NHS Trust',
+    'West Suffolk NHS Foundation Trust',
+  ],
+  'London': [
+    'Barking, Havering and Redbridge University Hospitals NHS Trust',
+    'Barts Health NHS Trust',
+    'Chelsea and Westminster Hospital NHS Foundation Trust',
+    'Great Ormond Street Hospital for Children NHS Foundation Trust',
+    'Guy\'s and St Thomas\' NHS Foundation Trust',
+    'Imperial College Healthcare NHS Trust',
+    'King\'s College Hospital NHS Foundation Trust',
+    'Kingston Hospital NHS Foundation Trust',
+    'Lewisham and Greenwich NHS Trust',
+    'London North West University Healthcare NHS Trust',
+    'Moorfields Eye Hospital NHS Foundation Trust',
+    'North Middlesex University Hospital NHS Trust',
+    'Northwick Park Hospital',
+    'Royal Free London NHS Foundation Trust',
+    'Royal National Orthopaedic Hospital NHS Trust',
+    'South London and Maudsley NHS Foundation Trust',
+    'St George\'s University Hospitals NHS Foundation Trust',
+    'University College London Hospitals NHS Foundation Trust',
+    'Whittington Health NHS Trust',
+  ],
+  'South East': [
+    'Ashford and St Peter\'s Hospitals NHS Foundation Trust',
+    'Brighton and Sussex University Hospitals NHS Trust',
+    'Buckinghamshire Healthcare NHS Trust',
+    'East Kent Hospitals University NHS Foundation Trust',
+    'East Sussex Healthcare NHS Trust',
+    'Frimley Health NHS Foundation Trust',
+    'Hampshire Hospitals NHS Foundation Trust',
+    'Isle of Wight NHS Trust',
+    'Medway NHS Foundation Trust',
+    'Oxford University Hospitals NHS Foundation Trust',
+    'Portsmouth Hospitals NHS Trust',
+    'Royal Berkshire NHS Foundation Trust',
+    'Royal Surrey County Hospital NHS Foundation Trust',
+    'Surrey and Sussex Healthcare NHS Trust',
+    'Western Sussex Hospitals NHS Foundation Trust',
+  ],
+  'South West': [
+    'Cornwall Partnership NHS Foundation Trust',
+    'Dorset County Hospital NHS Foundation Trust',
+    'Gloucestershire Hospitals NHS Foundation Trust',
+    'North Bristol NHS Trust',
+    'Royal Cornwall Hospitals NHS Trust',
+    'Royal Devon and Exeter NHS Foundation Trust',
+    'Royal United Hospitals Bath NHS Foundation Trust',
+    'Taunton and Somerset NHS Foundation Trust',
+    'University Hospitals Bristol and Weston NHS Foundation Trust',
+    'University Hospitals Plymouth NHS Trust',
+    'Weston Area Health NHS Trust',
+    'Yeovil District Hospital NHS Foundation Trust',
+  ],
+  'Wales': [
+    'Aneurin Bevan University Health Board',
+    'Betsi Cadwaladr University Health Board',
+    'Cardiff and Vale University Health Board',
+    'Cwm Taf Morgannwg University Health Board',
+    'Hywel Dda University Health Board',
+    'Powys Teaching Health Board',
+    'Swansea Bay University Health Board',
+  ],
+  'Scotland': [
+    'NHS Ayrshire and Arran',
+    'NHS Borders',
+    'NHS Dumfries and Galloway',
+    'NHS Fife',
+    'NHS Forth Valley',
+    'NHS Grampian',
+    'NHS Greater Glasgow and Clyde',
+    'NHS Highland',
+    'NHS Lanarkshire',
+    'NHS Lothian',
+    'NHS Orkney',
+    'NHS Shetland',
+    'NHS Tayside',
+    'NHS Western Isles',
+  ],
+  'Northern Ireland': [
+    'Belfast Health and Social Care Trust',
+    'Northern Health and Social Care Trust',
+    'South Eastern Health and Social Care Trust',
+    'Southern Health and Social Care Trust',
+    'Western Health and Social Care Trust',
+  ]
+};
+
+// Build reverse lookup: trust name → region
+const TRUST_TO_REGION = {};
+Object.entries(TRUST_REGIONS).forEach(([region, trusts]) => {
+  trusts.forEach(t => { TRUST_TO_REGION[t] = region; });
+});
+
+function getRegionForOrg(org) {
+  return TRUST_TO_REGION[org] || null;
+}
+
+function selectRegion(region) {
+  if (!region) return;
+  const trusts = TRUST_REGIONS[region] || [];
+  // Add all trusts in the region that exist in stakeholder data
+  const inData = new Set(stakeholders.map(s => s.org).filter(Boolean));
+  let added = 0;
+  trusts.forEach(t => {
+    if (!selectedTrusts.has(t) && inData.has(t)) {
+      selectedTrusts.add(t);
+      added++;
+    }
+  });
+  // Reset the region dropdown
+  document.getElementById('region-select').value = '';
+  renderTrustPills();
+  refreshCurrentPage();
+  if (added === 0) toast(`No stakeholders found in ${region}`);
+  else toast(`${added} trust${added !== 1 ? 's' : ''} from ${region} added to filter`);
+}
+
 // ─── GLOBAL TRUST FILTER ─────────────────────────────────────────────────────
 
 let selectedTrusts = new Set(); // persists across all page views
@@ -3116,6 +3486,8 @@ function removeTrust(trust) {
 
 function clearTrustFilter() {
   selectedTrusts.clear();
+  const regionSel = document.getElementById('region-select');
+  if (regionSel) regionSel.value = '';
   renderTrustPills();
   refreshCurrentPage();
 }
