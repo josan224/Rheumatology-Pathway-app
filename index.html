@@ -2474,8 +2474,27 @@ function renderQuadrant() {
   quadChart = new Chart(ctx,{type:'scatter',data:{datasets},options:{animation:{duration:600},
     scales:{x:{min:.5,max:3.5,ticks:{callback:v=>({1:'Low',2:'Medium',3:'High'}[v]||''),stepSize:1},title:{display:true,text:'INFLUENCE',font:{size:12,weight:'bold'}},grid:{display:false}},
             y:{min:.5,max:3.5,ticks:{callback:v=>({1:'Low',2:'Medium',3:'High'}[v]||''),stepSize:1},title:{display:true,text:'IMPACT',font:{size:12,weight:'bold'}},grid:{display:false}}},
-    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const s=stakeholders.find(st=>((st.name||st.role)+' ('+st.org+')')===c.dataset.label);return s?[c.dataset.label,`Impact: ${s.impact} · Influence: ${s.influence}`,`Advocacy: ${s.advocacy}`]:[c.dataset.label];}}}}},
-    plugins:[quadrantPlugin]});
+    plugins:{
+      legend:{display:false},
+      tooltip:{callbacks:{label:c=>{const s=stakeholders.find(st=>((st.name||st.role)+' ('+st.org+')')===c.dataset.label);return s?[c.dataset.label,`Impact: ${s.impact} · Influence: ${s.influence}`,`Advocacy: ${s.advocacy}`]:[c.dataset.label];}}}
+    },
+    onClick:(evt, elements) => {
+      if (!elements.length) return;
+      const datasetIdx = elements[0].datasetIndex;
+      const label = datasets[datasetIdx]?.label || '';
+      const s = qStakeholders.find(st => ((st.name||st.role)+' ('+st.org+')') === label);
+      if (!s) return;
+      openChartDrill(
+        s.name || s.role,
+        `${s.title ? s.title + ' · ' : ''}${s.role} · ${s.org}`,
+        [s]
+      );
+    }
+  },
+  plugins:[quadrantPlugin]});
+
+  // Show pointer cursor on hover
+  canvas.style.cursor = 'pointer';
 }
 
 // ─── PAINS & GAINS TEMPLATES ─────────────────────────────────────────────────
