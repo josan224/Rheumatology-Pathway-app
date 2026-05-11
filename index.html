@@ -713,6 +713,211 @@
     color: white;
   }
 
+  /* ── AUTH GATE (sign in / register / reset) ───────────────────────── */
+  #auth-gate {
+    position: fixed;
+    inset: 0;
+    z-index: 20000;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 20px;
+    overflow-y: auto;
+  }
+  #auth-gate::before {
+    content: '';
+    position: absolute;
+    bottom: -100px;
+    right: -100px;
+    width: 400px;
+    height: 400px;
+    border: 1.5px solid rgba(0,20,137,0.06);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .auth-panel {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+    background: white;
+    border: 1.5px solid var(--frame-gray);
+    border-radius: 4px;
+    box-shadow: var(--shadow-lg);
+    padding: 32px 28px 28px;
+  }
+  .auth-panel h2 {
+    font-family: 'Source Serif 4', serif;
+    font-weight: 300;
+    font-size: 26px;
+    color: #001489;
+    margin-bottom: 6px;
+    text-align: center;
+  }
+  .auth-panel .auth-lead {
+    font-size: 13px;
+    color: var(--deep-gray);
+    opacity: 0.75;
+    text-align: center;
+    margin-bottom: 22px;
+    line-height: 1.45;
+  }
+  .auth-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 22px;
+    border-bottom: 1.5px solid var(--frame-gray);
+  }
+  .auth-tabs button {
+    flex: 1;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    padding: 10px 8px;
+    border: none;
+    background: transparent;
+    color: var(--mid-gray);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1.5px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .auth-tabs button:hover { color: #001489; }
+  .auth-tabs button.active {
+    color: #001489;
+    border-bottom-color: #001489;
+  }
+  .auth-form label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--deep-gray);
+    margin-bottom: 6px;
+    margin-top: 14px;
+  }
+  .auth-form label:first-child { margin-top: 0; }
+  .auth-form input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--frame-gray);
+    border-radius: 2px;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .auth-form input:focus { border-color: #001489; }
+  .auth-hint {
+    font-size: 11px;
+    color: var(--mid-gray);
+    margin-top: 5px;
+    line-height: 1.4;
+  }
+  .auth-error {
+    background: var(--salmon-pale);
+    border: 1px solid var(--salmon);
+    color: #5c2d26;
+    font-size: 12px;
+    padding: 10px 12px;
+    border-radius: 2px;
+    margin-bottom: 14px;
+    display: none;
+  }
+  .auth-error.visible { display: block; }
+  .auth-submit {
+    width: 100%;
+    margin-top: 22px;
+    padding: 12px 16px;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: white;
+    background: #001489;
+    border: 1.5px solid #001489;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.15s, box-shadow 0.15s;
+  }
+  .auth-submit:hover {
+    background: #0d1f96;
+    box-shadow: 0 4px 16px rgba(0,20,137,0.22);
+  }
+  .auth-submit:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  .auth-foot {
+    text-align: center;
+    margin-top: 18px;
+    font-size: 12px;
+    color: var(--deep-gray);
+  }
+  .auth-foot button.linkish {
+    background: none;
+    border: none;
+    color: #001489;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 12px;
+    text-decoration: underline;
+    padding: 0;
+  }
+  .auth-foot button.linkish:hover { color: #0d1f96; }
+  .auth-logo-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .auth-logo-badge {
+    width: 48px;
+    height: 38px;
+    background: #001489;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+  }
+  .auth-logo-text {
+    font-family: 'Source Serif 4', serif;
+    font-weight: 300;
+    font-size: 18px;
+    color: #001489;
+  }
+  .sign-out-btn {
+    background: white;
+    border: 1.5px solid var(--frame-gray);
+    color: var(--deep-gray);
+    font-family: 'Exo 2', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 13px;
+    border-radius: 2px;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    transition: all 0.2s;
+    margin-left: 8px;
+  }
+  .sign-out-btn:hover {
+    border-color: #c44;
+    color: #a33;
+    background: #fff5f5;
+  }
+
   @media (max-width: 768px) {
     .header-inner { padding: 0 16px; }
     main { padding: 20px 12px; }
@@ -725,6 +930,79 @@
 </style>
 </head>
 <body>
+
+<!-- ── AUTH (sign in / register / password reset) ───────────────────── -->
+<div id="auth-gate">
+  <div class="auth-panel">
+    <div class="auth-logo-row">
+      <div class="auth-logo-badge">ucb</div>
+      <div class="auth-logo-text">Pathway Tool</div>
+    </div>
+
+    <div id="auth-view-signin">
+      <h2>Sign in</h2>
+      <p class="auth-lead">Use the account you created on this device. Passwords are never stored in plain text.</p>
+      <div class="auth-error" id="auth-err-signin" role="alert"></div>
+      <div class="auth-form">
+        <label for="auth-in-user">Username</label>
+        <input id="auth-in-user" type="text" autocomplete="username" maxlength="64">
+        <label for="auth-in-pass">Password</label>
+        <input id="auth-in-pass" type="password" autocomplete="current-password" maxlength="128">
+      </div>
+      <button type="button" class="auth-submit" id="auth-btn-signin" onclick="submitSignIn()">Sign in</button>
+      <div class="auth-foot">
+        No account?
+        <button type="button" class="linkish" onclick="showAuthView('register')">Create one</button>
+        ·
+        <button type="button" class="linkish" onclick="showAuthView('reset')">Forgot password</button>
+      </div>
+    </div>
+
+    <div id="auth-view-register" style="display:none;">
+      <h2>Create account</h2>
+      <p class="auth-lead">Choose a username and a strong password. You will need your recovery phrase to reset your password later.</p>
+      <div class="auth-error" id="auth-err-register" role="alert"></div>
+      <div class="auth-form">
+        <label for="auth-reg-user">Username</label>
+        <input id="auth-reg-user" type="text" autocomplete="username" maxlength="64">
+        <div class="auth-hint">3–64 characters. Letters, numbers, spaces, dot, underscore or hyphen.</div>
+        <label for="auth-reg-pass">Password</label>
+        <input id="auth-reg-pass" type="password" autocomplete="new-password" maxlength="128">
+        <div class="auth-hint">At least 8 characters with one uppercase letter and one special character (!@#$%^&amp;*…).</div>
+        <label for="auth-reg-pass2">Confirm password</label>
+        <input id="auth-reg-pass2" type="password" autocomplete="new-password" maxlength="128">
+        <label for="auth-reg-recovery">Recovery phrase</label>
+        <input id="auth-reg-recovery" type="password" autocomplete="new-password" maxlength="256">
+        <div class="auth-hint">At least 8 characters, different from your password. You will need this phrase to reset your password on this browser.</div>
+      </div>
+      <button type="button" class="auth-submit" id="auth-btn-register" onclick="submitRegister()">Register</button>
+      <div class="auth-foot">
+        Already have an account?
+        <button type="button" class="linkish" onclick="showAuthView('signin')">Sign in</button>
+      </div>
+    </div>
+
+    <div id="auth-view-reset" style="display:none;">
+      <h2>Reset password</h2>
+      <p class="auth-lead">Enter your username, the recovery phrase you set at registration, and a new password.</p>
+      <div class="auth-error" id="auth-err-reset" role="alert"></div>
+      <div class="auth-form">
+        <label for="auth-reset-user">Username</label>
+        <input id="auth-reset-user" type="text" autocomplete="username" maxlength="64">
+        <label for="auth-reset-recovery">Recovery phrase</label>
+        <input id="auth-reset-recovery" type="password" autocomplete="off" maxlength="256">
+        <label for="auth-reset-pass">New password</label>
+        <input id="auth-reset-pass" type="password" autocomplete="new-password" maxlength="128">
+        <label for="auth-reset-pass2">Confirm new password</label>
+        <input id="auth-reset-pass2" type="password" autocomplete="new-password" maxlength="128">
+      </div>
+      <button type="button" class="auth-submit" id="auth-btn-reset" onclick="submitPasswordReset()">Update password</button>
+      <div class="auth-foot">
+        <button type="button" class="linkish" onclick="showAuthView('signin')">Back to sign in</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ── LANDING PAGE ──────────────────────────────────────────────────── -->
 <div id="landing-page">
@@ -807,6 +1085,9 @@
   </div>
 
   <p class="landing-tagline">Inspired by patients. Driven by science.</p>
+  <p class="landing-tagline" style="margin-top:16px;">
+    <button type="button" onclick="signOut()" style="background:none;border:none;color:#001489;font-weight:700;cursor:pointer;font-family:'Exo 2',sans-serif;font-size:11px;text-decoration:underline;opacity:0.65;">Sign out</button>
+  </p>
 </div>
 
 <!-- ── APP SHELL (hidden until therapy area selected) ──────────────── -->
@@ -824,6 +1105,7 @@
         </div>
       </div>
     </div>
+    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;">
     <nav>
       <button class="active" onclick="showPage('flow', this)">Pathway Flow</button>
       <button onclick="showPage('dashboard', this)">Dashboard</button>
@@ -832,6 +1114,8 @@
       <button onclick="showPage('quadrant', this)">Quadrant</button>
       <button onclick="showPage('pains', this)">Pains &amp; Gains</button>
     </nav>
+    <button type="button" class="sign-out-btn" onclick="signOut()">Sign out</button>
+    </div>
   </div>
 </header>
 
@@ -3536,9 +3820,360 @@ document.addEventListener('click', e => {
   if (bar && !bar.contains(e.target)) hideTrustDropdown();
 });
 
+// ─── AUTH (local secure sign-in, PBKDF2-hashed passwords) ───────────────────
+
+const AUTH_SESSION_KEY = 'ucb_auth_session_v1';
+const AUTH_ACCOUNTS_KEY = 'ucb_local_accounts_v1';
+const PBKDF2_ITERS = 210000;
+const SESSION_MS = 12 * 60 * 60 * 1000; // 12 hours
+
+function authAccounts() {
+  try {
+    const raw = localStorage.getItem(AUTH_ACCOUNTS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveAuthAccounts(map) {
+  localStorage.setItem(AUTH_ACCOUNTS_KEY, JSON.stringify(map));
+}
+
+function normalizeUserKey(name) {
+  return name.trim().toLowerCase();
+}
+
+function validateUsername(name) {
+  const t = name.trim();
+  if (t.length < 3 || t.length > 64) return { ok: false, msg: 'Username must be between 3 and 64 characters.' };
+  if (!/^[a-zA-Z0-9 ._-]+$/.test(t)) {
+    return { ok: false, msg: 'Username may only contain letters, numbers, spaces, dot, underscore or hyphen.' };
+  }
+  return { ok: true, value: t };
+}
+
+function validatePasswordComplexity(pw) {
+  if (typeof pw !== 'string' || pw.length < 8) {
+    return { ok: false, msg: 'Password must be at least 8 characters.' };
+  }
+  if (!/[A-Z]/.test(pw)) {
+    return { ok: false, msg: 'Password must include at least one uppercase letter.' };
+  }
+  if (!/[^a-zA-Z0-9]/.test(pw)) {
+    return { ok: false, msg: 'Password must include at least one special character (for example !@#$%).' };
+  }
+  return { ok: true };
+}
+
+function bufToB64(buf) {
+  const bytes = new Uint8Array(buf);
+  let s = '';
+  for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return btoa(s);
+}
+
+function b64ToBuf(b64) {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+function randomSalt(len = 16) {
+  const a = new Uint8Array(len);
+  crypto.getRandomValues(a);
+  return a;
+}
+
+function timingSafeEqual(a, b) {
+  if (a.length !== b.length) return false;
+  let x = 0;
+  for (let i = 0; i < a.length; i++) x |= a[i] ^ b[i];
+  return x === 0;
+}
+
+async function pbkdf2Hash(password, saltBytes) {
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    enc.encode(password),
+    'PBKDF2',
+    false,
+    ['deriveBits']
+  );
+  const bits = await crypto.subtle.deriveBits(
+    {
+      name: 'PBKDF2',
+      salt: saltBytes,
+      iterations: PBKDF2_ITERS,
+      hash: 'SHA-256'
+    },
+    keyMaterial,
+    256
+  );
+  return new Uint8Array(bits);
+}
+
+function authCryptoReady() {
+  return typeof crypto !== 'undefined' && crypto.subtle && typeof localStorage !== 'undefined';
+}
+
+function setAuthError(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (!msg) {
+    el.textContent = '';
+    el.classList.remove('visible');
+    return;
+  }
+  el.textContent = msg;
+  el.classList.add('visible');
+}
+
+function showAuthView(view) {
+  const signin = document.getElementById('auth-view-signin');
+  const reg = document.getElementById('auth-view-register');
+  const reset = document.getElementById('auth-view-reset');
+  if (signin) signin.style.display = view === 'signin' ? 'block' : 'none';
+  if (reg) reg.style.display = view === 'register' ? 'block' : 'none';
+  if (reset) reset.style.display = view === 'reset' ? 'block' : 'none';
+  setAuthError('auth-err-signin', '');
+  setAuthError('auth-err-register', '');
+  setAuthError('auth-err-reset', '');
+}
+
+function isSessionValid() {
+  try {
+    const raw = sessionStorage.getItem(AUTH_SESSION_KEY);
+    if (!raw) return false;
+    const o = JSON.parse(raw);
+    if (!o || typeof o.exp !== 'number' || Date.now() > o.exp) return false;
+    const key = o.accountKey;
+    if (!key || !authAccounts()[key]) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function setSession(accountKey) {
+  sessionStorage.setItem(
+    AUTH_SESSION_KEY,
+    JSON.stringify({ accountKey, exp: Date.now() + SESSION_MS })
+  );
+}
+
+function clearSession() {
+  sessionStorage.removeItem(AUTH_SESSION_KEY);
+}
+
+function applyAuthVisibility() {
+  const gate = document.getElementById('auth-gate');
+  const land = document.getElementById('landing-page');
+  const shell = document.getElementById('app-shell');
+  if (!gate || !land || !shell) return;
+  if (isSessionValid()) {
+    gate.style.display = 'none';
+    if (shell.style.display !== 'block') land.style.display = 'flex';
+  } else {
+    gate.style.display = 'flex';
+    land.style.display = 'none';
+    shell.style.display = 'none';
+  }
+}
+
+async function submitSignIn() {
+  if (!authCryptoReady()) {
+    setAuthError('auth-err-signin', 'Secure sign-in requires a modern browser over HTTPS (or localhost).');
+    return;
+  }
+  const uRaw = document.getElementById('auth-in-user').value;
+  const pw = document.getElementById('auth-in-pass').value;
+  const btn = document.getElementById('auth-btn-signin');
+  const key = normalizeUserKey(uRaw);
+  const acc = authAccounts()[key];
+  if (!acc) {
+    setAuthError('auth-err-signin', 'Unknown username or incorrect password.');
+    return;
+  }
+  btn.disabled = true;
+  try {
+    const salt = b64ToBuf(acc.saltPwd);
+    const hash = await pbkdf2Hash(pw, salt);
+    if (!timingSafeEqual(hash, b64ToBuf(acc.hashPwd))) {
+      setAuthError('auth-err-signin', 'Unknown username or incorrect password.');
+      return;
+    }
+    setSession(key);
+    document.getElementById('auth-in-pass').value = '';
+    applyAuthVisibility();
+    toast('Signed in successfully');
+  } catch (e) {
+    console.error(e);
+    setAuthError('auth-err-signin', 'Sign-in failed. Please try again.');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function submitRegister() {
+  if (!authCryptoReady()) {
+    setAuthError('auth-err-register', 'Registration requires a modern browser over HTTPS (or localhost).');
+    return;
+  }
+  const uCheck = validateUsername(document.getElementById('auth-reg-user').value);
+  if (!uCheck.ok) {
+    setAuthError('auth-err-register', uCheck.msg);
+    return;
+  }
+  const pw = document.getElementById('auth-reg-pass').value;
+  const pw2 = document.getElementById('auth-reg-pass2').value;
+  const rec = document.getElementById('auth-reg-recovery').value;
+  const pwc = validatePasswordComplexity(pw);
+  if (!pwc.ok) {
+    setAuthError('auth-err-register', pwc.msg);
+    return;
+  }
+  if (pw !== pw2) {
+    setAuthError('auth-err-register', 'Passwords do not match.');
+    return;
+  }
+  if (rec.trim().length < 8) {
+    setAuthError('auth-err-register', 'Recovery phrase must be at least 8 characters.');
+    return;
+  }
+  if (rec === pw) {
+    setAuthError('auth-err-register', 'Recovery phrase must be different from your password.');
+    return;
+  }
+  const key = normalizeUserKey(uCheck.value);
+  const all = authAccounts();
+  if (all[key]) {
+    setAuthError('auth-err-register', 'That username is already taken on this browser.');
+    return;
+  }
+  const btn = document.getElementById('auth-btn-register');
+  btn.disabled = true;
+  try {
+    const saltPwd = randomSalt();
+    const saltRec = randomSalt();
+    const hashPwd = await pbkdf2Hash(pw, saltPwd);
+    const hashRec = await pbkdf2Hash(rec, saltRec);
+    all[key] = {
+      v: 1,
+      displayName: uCheck.value,
+      saltPwd: bufToB64(saltPwd),
+      hashPwd: bufToB64(hashPwd),
+      saltRec: bufToB64(saltRec),
+      hashRec: bufToB64(hashRec),
+      iters: PBKDF2_ITERS
+    };
+    saveAuthAccounts(all);
+    setSession(key);
+    document.getElementById('auth-reg-pass').value = '';
+    document.getElementById('auth-reg-pass2').value = '';
+    document.getElementById('auth-reg-recovery').value = '';
+    applyAuthVisibility();
+    toast('Account created. You are now signed in.');
+  } catch (e) {
+    console.error(e);
+    setAuthError('auth-err-register', 'Registration failed. Please try again.');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function submitPasswordReset() {
+  if (!authCryptoReady()) {
+    setAuthError('auth-err-reset', 'Password reset requires a modern browser over HTTPS (or localhost).');
+    return;
+  }
+  const uRaw = document.getElementById('auth-reset-user').value;
+  const rec = document.getElementById('auth-reset-recovery').value;
+  const pw = document.getElementById('auth-reset-pass').value;
+  const pw2 = document.getElementById('auth-reset-pass2').value;
+  const key = normalizeUserKey(uRaw);
+  const acc = authAccounts()[key];
+  if (!acc) {
+    setAuthError('auth-err-reset', 'Could not reset password. Check the username and recovery phrase, then try again.');
+    return;
+  }
+  const pwc = validatePasswordComplexity(pw);
+  if (!pwc.ok) {
+    setAuthError('auth-err-reset', pwc.msg);
+    return;
+  }
+  if (pw !== pw2) {
+    setAuthError('auth-err-reset', 'New passwords do not match.');
+    return;
+  }
+  const btn = document.getElementById('auth-btn-reset');
+  btn.disabled = true;
+  try {
+    const saltRec = b64ToBuf(acc.saltRec);
+    const hashRec = await pbkdf2Hash(rec, saltRec);
+    if (!timingSafeEqual(hashRec, b64ToBuf(acc.hashRec))) {
+      setAuthError('auth-err-reset', 'Could not reset password. Check the username and recovery phrase, then try again.');
+      return;
+    }
+    const saltPwd = randomSalt();
+    const hashPwd = await pbkdf2Hash(pw, saltPwd);
+    const all = authAccounts();
+    all[key] = {
+      ...acc,
+      saltPwd: bufToB64(saltPwd),
+      hashPwd: bufToB64(hashPwd),
+      iters: PBKDF2_ITERS
+    };
+    saveAuthAccounts(all);
+    document.getElementById('auth-reset-pass').value = '';
+    document.getElementById('auth-reset-pass2').value = '';
+    document.getElementById('auth-reset-recovery').value = '';
+    setAuthError('auth-err-reset', '');
+    toast('Password updated. You can sign in with your new password.');
+    showAuthView('signin');
+  } catch (e) {
+    console.error(e);
+    setAuthError('auth-err-reset', 'Reset failed. Please try again.');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function signOut() {
+  clearSession();
+  document.getElementById('app-shell').style.display = 'none';
+  document.getElementById('landing-page').style.display = 'none';
+  document.getElementById('auth-gate').style.display = 'flex';
+  showAuthView('signin');
+  const p = document.getElementById('auth-in-pass');
+  if (p) p.value = '';
+}
+
+// Enter key submits active auth form
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const gate = document.getElementById('auth-gate');
+  if (!gate || gate.style.display === 'none') return;
+  const signin = document.getElementById('auth-view-signin');
+  const reg = document.getElementById('auth-view-register');
+  const reset = document.getElementById('auth-view-reset');
+  if (signin && signin.style.display !== 'none') submitSignIn();
+  else if (reg && reg.style.display !== 'none') submitRegister();
+  else if (reset && reset.style.display !== 'none') submitPasswordReset();
+});
+
 // ─── LANDING PAGE ────────────────────────────────────────────────────────────
 
 function enterApp(area) {
+  if (!isSessionValid()) {
+    toast('Please sign in to continue');
+    document.getElementById('auth-gate').style.display = 'flex';
+    document.getElementById('landing-page').style.display = 'none';
+    showAuthView('signin');
+    return;
+  }
   if (area !== 'rheumatology') return; // only rheumatology active
   document.getElementById('landing-page').style.display = 'none';
   document.getElementById('app-shell').style.display = 'block';
@@ -3561,6 +4196,7 @@ function goHome() {
 // ─── INIT ────────────────────────────────────────────────────────────────────
 
 (async () => {
+  applyAuthVisibility();
   // Load data silently in background — don't show overlay so landing page stays clickable
   try {
     await loadAllData(true); // silent = true
