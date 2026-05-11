@@ -959,7 +959,7 @@
 
     <div id="auth-view-register" style="display:none;">
       <h2>Create account</h2>
-      <p class="auth-lead" id="auth-lead-register">Register with your email and a strong password.</p>
+      <p class="auth-lead" id="auth-lead-register">Register using your email and password.</p>
       <div class="auth-error" id="auth-err-register" role="alert"></div>
       <div class="auth-form">
         <label for="auth-reg-user">Email</label>
@@ -4046,19 +4046,14 @@ function showAuthView(view) {
 function syncAuthLabels() {
   const sb = useSupabaseAuth();
   const leadIn = document.getElementById('auth-lead-signin');
-  const leadReg = document.getElementById('auth-lead-register');
   const hi = document.getElementById('auth-hint-reg-user');
   if (sb) {
     if (leadIn) leadIn.textContent = 'Sign in with your work email and password.';
-    if (leadReg) leadReg.textContent = 'Create your account with your work email and a strong password.';
     if (hi) hi.textContent = 'Your work email is your sign-in. The same account works on any device.';
   } else {
     if (leadIn)
       leadIn.textContent =
         'Sign in with the email and password you used when you registered on this browser.';
-    if (leadReg)
-      leadReg.textContent =
-        'Register with your email and a strong password. This account is stored only on this browser until hosted sign-in is configured (see docs/USER_AUTH_BACKEND.md).';
     if (hi) hi.textContent = 'Use a valid email address. For accounts that work on every device, configure Supabase in index.html.';
   }
 }
