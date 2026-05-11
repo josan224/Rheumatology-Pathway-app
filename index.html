@@ -931,7 +931,7 @@
 </head>
 <body>
 
-<!-- ── AUTH (sign in / register / password reset) ───────────────────── -->
+<!-- ── AUTH (sign in / register) ─────────────────────────────────────── -->
 <div id="auth-gate">
   <div class="auth-panel">
     <div class="auth-logo-row">
@@ -941,11 +941,11 @@
 
     <div id="auth-view-signin">
       <h2>Sign in</h2>
-      <p class="auth-lead">Use the account you created on this device. Passwords are never stored in plain text.</p>
+      <p class="auth-lead" id="auth-lead-signin">Sign in with your account.</p>
       <div class="auth-error" id="auth-err-signin" role="alert"></div>
       <div class="auth-form">
-        <label for="auth-in-user">Username</label>
-        <input id="auth-in-user" type="text" autocomplete="username" maxlength="64">
+        <label for="auth-in-user" id="auth-label-in-user">Username</label>
+        <input id="auth-in-user" type="text" autocomplete="username" maxlength="254">
         <label for="auth-in-pass">Password</label>
         <input id="auth-in-pass" type="password" autocomplete="current-password" maxlength="128">
       </div>
@@ -953,52 +953,28 @@
       <div class="auth-foot">
         No account?
         <button type="button" class="linkish" onclick="showAuthView('register')">Create one</button>
-        ·
-        <button type="button" class="linkish" onclick="showAuthView('reset')">Forgot password</button>
       </div>
+      <p class="auth-hint" style="text-align:center;margin-top:14px;margin-bottom:0;">To reset your password, contact your administrator.</p>
     </div>
 
     <div id="auth-view-register" style="display:none;">
       <h2>Create account</h2>
-      <p class="auth-lead">Choose a username and a strong password. You will need your recovery phrase to reset your password later.</p>
+      <p class="auth-lead" id="auth-lead-register">Choose a username and a strong password.</p>
       <div class="auth-error" id="auth-err-register" role="alert"></div>
       <div class="auth-form">
-        <label for="auth-reg-user">Username</label>
-        <input id="auth-reg-user" type="text" autocomplete="username" maxlength="64">
-        <div class="auth-hint">3–64 characters. Letters, numbers, spaces, dot, underscore or hyphen.</div>
+        <label for="auth-reg-user" id="auth-label-reg-user">Username</label>
+        <input id="auth-reg-user" type="text" autocomplete="username" maxlength="254">
+        <div class="auth-hint" id="auth-hint-reg-user">3–64 characters. Letters, numbers, spaces, dot, underscore or hyphen.</div>
         <label for="auth-reg-pass">Password</label>
         <input id="auth-reg-pass" type="password" autocomplete="new-password" maxlength="128">
         <div class="auth-hint">At least 8 characters with one uppercase letter and one special character (!@#$%^&amp;*…).</div>
         <label for="auth-reg-pass2">Confirm password</label>
         <input id="auth-reg-pass2" type="password" autocomplete="new-password" maxlength="128">
-        <label for="auth-reg-recovery">Recovery phrase</label>
-        <input id="auth-reg-recovery" type="password" autocomplete="new-password" maxlength="256">
-        <div class="auth-hint">At least 8 characters, different from your password. You will need this phrase to reset your password on this browser.</div>
       </div>
       <button type="button" class="auth-submit" id="auth-btn-register" onclick="submitRegister()">Register</button>
       <div class="auth-foot">
         Already have an account?
         <button type="button" class="linkish" onclick="showAuthView('signin')">Sign in</button>
-      </div>
-    </div>
-
-    <div id="auth-view-reset" style="display:none;">
-      <h2>Reset password</h2>
-      <p class="auth-lead">Enter your username, the recovery phrase you set at registration, and a new password.</p>
-      <div class="auth-error" id="auth-err-reset" role="alert"></div>
-      <div class="auth-form">
-        <label for="auth-reset-user">Username</label>
-        <input id="auth-reset-user" type="text" autocomplete="username" maxlength="64">
-        <label for="auth-reset-recovery">Recovery phrase</label>
-        <input id="auth-reset-recovery" type="password" autocomplete="off" maxlength="256">
-        <label for="auth-reset-pass">New password</label>
-        <input id="auth-reset-pass" type="password" autocomplete="new-password" maxlength="128">
-        <label for="auth-reset-pass2">Confirm new password</label>
-        <input id="auth-reset-pass2" type="password" autocomplete="new-password" maxlength="128">
-      </div>
-      <button type="button" class="auth-submit" id="auth-btn-reset" onclick="submitPasswordReset()">Update password</button>
-      <div class="auth-foot">
-        <button type="button" class="linkish" onclick="showAuthView('signin')">Back to sign in</button>
       </div>
     </div>
   </div>
@@ -1975,6 +1951,10 @@ const AT_TOKEN = 'pato9DmsJ3I1EkLYH.0ee7268ad995d9965b1b32b87f9c634bf284f92edfd8
 const AT_BASE  = 'app1ENiTGrD7MARmH';
 const AT_URL   = `https://api.airtable.com/v0/${AT_BASE}`;
 const AT_HEADS = { 'Authorization': `Bearer ${AT_TOKEN}`, 'Content-Type': 'application/json' };
+
+/** Optional hosted auth — set both for sign-in across devices (Supabase). See docs/USER_AUTH_BACKEND.md */
+const SB_URL = '';
+const SB_ANON_KEY = '';
 
 // In-memory cache — everything the app needs
 let stakeholders = [];   // { id, _atId, org, name, role, indication, impact, influence, advocacy, steps, interests, strategy, notes }
@@ -3820,12 +3800,119 @@ document.addEventListener('click', e => {
   if (bar && !bar.contains(e.target)) hideTrustDropdown();
 });
 
-// ─── AUTH (local secure sign-in, PBKDF2-hashed passwords) ───────────────────
+// ─── AUTH (optional Supabase cross-device, or local PBKDF2) ──────────────────
 
 const AUTH_SESSION_KEY = 'ucb_auth_session_v1';
 const AUTH_ACCOUNTS_KEY = 'ucb_local_accounts_v1';
 const PBKDF2_ITERS = 210000;
-const SESSION_MS = 12 * 60 * 60 * 1000; // 12 hours
+const SESSION_MS_LOCAL = 12 * 60 * 60 * 1000; // 12 hours
+
+function useSupabaseAuth() {
+  const u = (typeof SB_URL === 'string' ? SB_URL : '').trim();
+  const k = (typeof SB_ANON_KEY === 'string' ? SB_ANON_KEY : '').trim();
+  return u.length > 0 && k.length > 0 && u.startsWith('https://');
+}
+
+function sbApiBase() {
+  return SB_URL.trim().replace(/\/$/, '');
+}
+
+function sbHeaders(bearerOverride) {
+  const key = SB_ANON_KEY.trim();
+  return {
+    'Content-Type': 'application/json',
+    apikey: key,
+    Authorization: `Bearer ${bearerOverride || key}`
+  };
+}
+
+async function supabaseSignIn(email, password) {
+  const res = await fetch(`${sbApiBase()}/auth/v1/token?grant_type=password`, {
+    method: 'POST',
+    headers: sbHeaders(),
+    body: JSON.stringify({ email, password })
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg =
+      data.error_description || data.msg || data.message || data.error || 'Invalid email or password.';
+    throw new Error(msg);
+  }
+  return data;
+}
+
+async function supabaseSignUp(email, password) {
+  const res = await fetch(`${sbApiBase()}/auth/v1/signup`, {
+    method: 'POST',
+    headers: sbHeaders(),
+    body: JSON.stringify({ email, password })
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg =
+      data.msg || data.error_description || data.message || data.error || `Registration failed (${res.status}).`;
+    throw new Error(msg);
+  }
+  return data;
+}
+
+function setSbSessionFromAuthResponse(data) {
+  const access = data.access_token;
+  const refresh = data.refresh_token;
+  const sec = data.expires_in || 3600;
+  if (!access || !refresh) {
+    throw new Error(
+      'No session returned. If your project requires email confirmation, confirm your email first or ask your administrator to adjust Auth settings (see docs/USER_AUTH_BACKEND.md).'
+    );
+  }
+  sessionStorage.setItem(
+    AUTH_SESSION_KEY,
+    JSON.stringify({
+      kind: 'sb',
+      access_token: access,
+      refresh_token: refresh,
+      exp: Date.now() + sec * 1000
+    })
+  );
+}
+
+async function supabaseRefreshTokens() {
+  const raw = sessionStorage.getItem(AUTH_SESSION_KEY);
+  if (!raw) return false;
+  let o;
+  try {
+    o = JSON.parse(raw);
+  } catch {
+    return false;
+  }
+  if (o.kind !== 'sb' || !o.refresh_token) return false;
+  const res = await fetch(`${sbApiBase()}/auth/v1/token?grant_type=refresh_token`, {
+    method: 'POST',
+    headers: sbHeaders(),
+    body: JSON.stringify({ refresh_token: o.refresh_token })
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    clearSession();
+    return false;
+  }
+  setSbSessionFromAuthResponse(data);
+  return true;
+}
+
+async function ensureAuthSessionFresh() {
+  const raw = sessionStorage.getItem(AUTH_SESSION_KEY);
+  if (!raw) return;
+  let o;
+  try {
+    o = JSON.parse(raw);
+  } catch {
+    return;
+  }
+  if (o.kind !== 'sb') return;
+  if (o.exp > Date.now() + 120000) return;
+  await supabaseRefreshTokens();
+}
 
 function authAccounts() {
   try {
@@ -3850,6 +3937,13 @@ function validateUsername(name) {
   if (!/^[a-zA-Z0-9 ._-]+$/.test(t)) {
     return { ok: false, msg: 'Username may only contain letters, numbers, spaces, dot, underscore or hyphen.' };
   }
+  return { ok: true, value: t };
+}
+
+function validateWorkEmail(email) {
+  const t = (email || '').trim().toLowerCase();
+  if (t.length < 5 || t.length > 254) return { ok: false, msg: 'Enter a valid email address.' };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t)) return { ok: false, msg: 'Enter a valid email address.' };
   return { ok: true, value: t };
 }
 
@@ -3934,13 +4028,54 @@ function setAuthError(id, msg) {
 function showAuthView(view) {
   const signin = document.getElementById('auth-view-signin');
   const reg = document.getElementById('auth-view-register');
-  const reset = document.getElementById('auth-view-reset');
   if (signin) signin.style.display = view === 'signin' ? 'block' : 'none';
   if (reg) reg.style.display = view === 'register' ? 'block' : 'none';
-  if (reset) reset.style.display = view === 'reset' ? 'block' : 'none';
   setAuthError('auth-err-signin', '');
   setAuthError('auth-err-register', '');
-  setAuthError('auth-err-reset', '');
+}
+
+function syncAuthLabels() {
+  const sb = useSupabaseAuth();
+  const li = document.getElementById('auth-label-in-user');
+  const lr = document.getElementById('auth-label-reg-user');
+  const hi = document.getElementById('auth-hint-reg-user');
+  const inUser = document.getElementById('auth-in-user');
+  const regUser = document.getElementById('auth-reg-user');
+  const leadIn = document.getElementById('auth-lead-signin');
+  const leadReg = document.getElementById('auth-lead-register');
+  if (sb) {
+    if (li) li.textContent = 'Work email';
+    if (lr) lr.textContent = 'Work email';
+    if (hi) hi.textContent = 'Use your work email. The same account works on any device once Supabase is configured.';
+    if (inUser) {
+      inUser.type = 'email';
+      inUser.autocomplete = 'username';
+    }
+    if (regUser) {
+      regUser.type = 'email';
+      regUser.autocomplete = 'email';
+    }
+    if (leadIn) leadIn.textContent = 'Sign in with your work email and password.';
+    if (leadReg) leadReg.textContent = 'Create your account with a work email and a strong password.';
+  } else {
+    if (li) li.textContent = 'Username';
+    if (lr) lr.textContent = 'Username';
+    if (hi) hi.textContent = '3–64 characters. Letters, numbers, spaces, dot, underscore or hyphen.';
+    if (inUser) {
+      inUser.type = 'text';
+      inUser.autocomplete = 'username';
+    }
+    if (regUser) {
+      regUser.type = 'text';
+      regUser.autocomplete = 'username';
+    }
+    if (leadIn)
+      leadIn.textContent =
+        'Use the account you created on this browser. Passwords are stored only as secure hashes on this device. For accounts that work everywhere, configure Supabase (see docs/USER_AUTH_BACKEND.md).';
+    if (leadReg)
+      leadReg.textContent =
+        'Choose a username and a strong password. Accounts are stored only in this browser until hosted auth is configured.';
+  }
 }
 
 function isSessionValid() {
@@ -3948,19 +4083,29 @@ function isSessionValid() {
     const raw = sessionStorage.getItem(AUTH_SESSION_KEY);
     if (!raw) return false;
     const o = JSON.parse(raw);
-    if (!o || typeof o.exp !== 'number' || Date.now() > o.exp) return false;
+    if (o.kind === 'sb') {
+      return !!(o.access_token && typeof o.exp === 'number' && Date.now() < o.exp);
+    }
     const key = o.accountKey;
-    if (!key || !authAccounts()[key]) return false;
-    return true;
+    const kind = o.kind || (key ? 'local' : '');
+    if (kind === 'local' || (key && !o.kind)) {
+      if (!key || typeof o.exp !== 'number' || Date.now() > o.exp) return false;
+      return !!authAccounts()[key];
+    }
+    return false;
   } catch {
     return false;
   }
 }
 
-function setSession(accountKey) {
+function setLocalSession(accountKey) {
   sessionStorage.setItem(
     AUTH_SESSION_KEY,
-    JSON.stringify({ accountKey, exp: Date.now() + SESSION_MS })
+    JSON.stringify({
+      kind: 'local',
+      accountKey,
+      exp: Date.now() + SESSION_MS_LOCAL
+    })
   );
 }
 
@@ -3984,13 +4129,36 @@ function applyAuthVisibility() {
 }
 
 async function submitSignIn() {
+  const btn = document.getElementById('auth-btn-signin');
+  if (useSupabaseAuth()) {
+    const emailCheck = validateWorkEmail(document.getElementById('auth-in-user').value);
+    const pw = document.getElementById('auth-in-pass').value;
+    if (!emailCheck.ok) {
+      setAuthError('auth-err-signin', emailCheck.msg);
+      return;
+    }
+    btn.disabled = true;
+    try {
+      const data = await supabaseSignIn(emailCheck.value, pw);
+      setSbSessionFromAuthResponse(data);
+      document.getElementById('auth-in-pass').value = '';
+      applyAuthVisibility();
+      toast('Signed in successfully');
+    } catch (e) {
+      console.error(e);
+      setAuthError('auth-err-signin', e.message || 'Sign-in failed. Please try again.');
+    } finally {
+      btn.disabled = false;
+    }
+    return;
+  }
+
   if (!authCryptoReady()) {
     setAuthError('auth-err-signin', 'Secure sign-in requires a modern browser over HTTPS (or localhost).');
     return;
   }
   const uRaw = document.getElementById('auth-in-user').value;
   const pw = document.getElementById('auth-in-pass').value;
-  const btn = document.getElementById('auth-btn-signin');
   const key = normalizeUserKey(uRaw);
   const acc = authAccounts()[key];
   if (!acc) {
@@ -4005,7 +4173,7 @@ async function submitSignIn() {
       setAuthError('auth-err-signin', 'Unknown username or incorrect password.');
       return;
     }
-    setSession(key);
+    setLocalSession(key);
     document.getElementById('auth-in-pass').value = '';
     applyAuthVisibility();
     toast('Signed in successfully');
@@ -4018,6 +4186,48 @@ async function submitSignIn() {
 }
 
 async function submitRegister() {
+  const btn = document.getElementById('auth-btn-register');
+  if (useSupabaseAuth()) {
+    const emailCheck = validateWorkEmail(document.getElementById('auth-reg-user').value);
+    const pw = document.getElementById('auth-reg-pass').value;
+    const pw2 = document.getElementById('auth-reg-pass2').value;
+    if (!emailCheck.ok) {
+      setAuthError('auth-err-register', emailCheck.msg);
+      return;
+    }
+    const pwc = validatePasswordComplexity(pw);
+    if (!pwc.ok) {
+      setAuthError('auth-err-register', pwc.msg);
+      return;
+    }
+    if (pw !== pw2) {
+      setAuthError('auth-err-register', 'Passwords do not match.');
+      return;
+    }
+    btn.disabled = true;
+    try {
+      const data = await supabaseSignUp(emailCheck.value, pw);
+      if (data.session) {
+        setSbSessionFromAuthResponse(data);
+        document.getElementById('auth-reg-pass').value = '';
+        document.getElementById('auth-reg-pass2').value = '';
+        applyAuthVisibility();
+        toast('Account created. You are now signed in.');
+      } else {
+        setAuthError(
+          'auth-err-register',
+          'Account created but you are not signed in yet. Confirm your email if required, or ask your administrator to allow immediate sign-in (see docs/USER_AUTH_BACKEND.md).'
+        );
+      }
+    } catch (e) {
+      console.error(e);
+      setAuthError('auth-err-register', e.message || 'Registration failed. Please try again.');
+    } finally {
+      btn.disabled = false;
+    }
+    return;
+  }
+
   if (!authCryptoReady()) {
     setAuthError('auth-err-register', 'Registration requires a modern browser over HTTPS (or localhost).');
     return;
@@ -4029,7 +4239,6 @@ async function submitRegister() {
   }
   const pw = document.getElementById('auth-reg-pass').value;
   const pw2 = document.getElementById('auth-reg-pass2').value;
-  const rec = document.getElementById('auth-reg-recovery').value;
   const pwc = validatePasswordComplexity(pw);
   if (!pwc.ok) {
     setAuthError('auth-err-register', pwc.msg);
@@ -4039,103 +4248,32 @@ async function submitRegister() {
     setAuthError('auth-err-register', 'Passwords do not match.');
     return;
   }
-  if (rec.trim().length < 8) {
-    setAuthError('auth-err-register', 'Recovery phrase must be at least 8 characters.');
-    return;
-  }
-  if (rec === pw) {
-    setAuthError('auth-err-register', 'Recovery phrase must be different from your password.');
-    return;
-  }
   const key = normalizeUserKey(uCheck.value);
   const all = authAccounts();
   if (all[key]) {
     setAuthError('auth-err-register', 'That username is already taken on this browser.');
     return;
   }
-  const btn = document.getElementById('auth-btn-register');
   btn.disabled = true;
   try {
     const saltPwd = randomSalt();
-    const saltRec = randomSalt();
     const hashPwd = await pbkdf2Hash(pw, saltPwd);
-    const hashRec = await pbkdf2Hash(rec, saltRec);
     all[key] = {
-      v: 1,
+      v: 2,
       displayName: uCheck.value,
       saltPwd: bufToB64(saltPwd),
       hashPwd: bufToB64(hashPwd),
-      saltRec: bufToB64(saltRec),
-      hashRec: bufToB64(hashRec),
       iters: PBKDF2_ITERS
     };
     saveAuthAccounts(all);
-    setSession(key);
+    setLocalSession(key);
     document.getElementById('auth-reg-pass').value = '';
     document.getElementById('auth-reg-pass2').value = '';
-    document.getElementById('auth-reg-recovery').value = '';
     applyAuthVisibility();
     toast('Account created. You are now signed in.');
   } catch (e) {
     console.error(e);
     setAuthError('auth-err-register', 'Registration failed. Please try again.');
-  } finally {
-    btn.disabled = false;
-  }
-}
-
-async function submitPasswordReset() {
-  if (!authCryptoReady()) {
-    setAuthError('auth-err-reset', 'Password reset requires a modern browser over HTTPS (or localhost).');
-    return;
-  }
-  const uRaw = document.getElementById('auth-reset-user').value;
-  const rec = document.getElementById('auth-reset-recovery').value;
-  const pw = document.getElementById('auth-reset-pass').value;
-  const pw2 = document.getElementById('auth-reset-pass2').value;
-  const key = normalizeUserKey(uRaw);
-  const acc = authAccounts()[key];
-  if (!acc) {
-    setAuthError('auth-err-reset', 'Could not reset password. Check the username and recovery phrase, then try again.');
-    return;
-  }
-  const pwc = validatePasswordComplexity(pw);
-  if (!pwc.ok) {
-    setAuthError('auth-err-reset', pwc.msg);
-    return;
-  }
-  if (pw !== pw2) {
-    setAuthError('auth-err-reset', 'New passwords do not match.');
-    return;
-  }
-  const btn = document.getElementById('auth-btn-reset');
-  btn.disabled = true;
-  try {
-    const saltRec = b64ToBuf(acc.saltRec);
-    const hashRec = await pbkdf2Hash(rec, saltRec);
-    if (!timingSafeEqual(hashRec, b64ToBuf(acc.hashRec))) {
-      setAuthError('auth-err-reset', 'Could not reset password. Check the username and recovery phrase, then try again.');
-      return;
-    }
-    const saltPwd = randomSalt();
-    const hashPwd = await pbkdf2Hash(pw, saltPwd);
-    const all = authAccounts();
-    all[key] = {
-      ...acc,
-      saltPwd: bufToB64(saltPwd),
-      hashPwd: bufToB64(hashPwd),
-      iters: PBKDF2_ITERS
-    };
-    saveAuthAccounts(all);
-    document.getElementById('auth-reset-pass').value = '';
-    document.getElementById('auth-reset-pass2').value = '';
-    document.getElementById('auth-reset-recovery').value = '';
-    setAuthError('auth-err-reset', '');
-    toast('Password updated. You can sign in with your new password.');
-    showAuthView('signin');
-  } catch (e) {
-    console.error(e);
-    setAuthError('auth-err-reset', 'Reset failed. Please try again.');
   } finally {
     btn.disabled = false;
   }
@@ -4151,17 +4289,14 @@ function signOut() {
   if (p) p.value = '';
 }
 
-// Enter key submits active auth form
 document.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   const gate = document.getElementById('auth-gate');
   if (!gate || gate.style.display === 'none') return;
   const signin = document.getElementById('auth-view-signin');
   const reg = document.getElementById('auth-view-register');
-  const reset = document.getElementById('auth-view-reset');
   if (signin && signin.style.display !== 'none') submitSignIn();
   else if (reg && reg.style.display !== 'none') submitRegister();
-  else if (reset && reset.style.display !== 'none') submitPasswordReset();
 });
 
 // ─── LANDING PAGE ────────────────────────────────────────────────────────────
@@ -4196,6 +4331,12 @@ function goHome() {
 // ─── INIT ────────────────────────────────────────────────────────────────────
 
 (async () => {
+  try {
+    await ensureAuthSessionFresh();
+  } catch (e) {
+    console.warn('Session refresh:', e);
+  }
+  syncAuthLabels();
   applyAuthVisibility();
   // Load data silently in background — don't show overlay so landing page stays clickable
   try {
