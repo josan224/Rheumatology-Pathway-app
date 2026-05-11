@@ -3856,10 +3856,32 @@ async function supabaseSignUp(email, password) {
   return data;
 }
 
+/** Supabase may return tokens at the root (signup / password) or nested under `session`. */
+function normalizeSbSessionPayload(data) {
+  if (!data || typeof data !== 'object') return null;
+  if (data.access_token && data.refresh_token) {
+    return {
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+      expires_in: data.expires_in || 3600
+    };
+  }
+  const s = data.session;
+  if (s && typeof s === 'object' && s.access_token && s.refresh_token) {
+    return {
+      access_token: s.access_token,
+      refresh_token: s.refresh_token,
+      expires_in: s.expires_in || data.expires_in || 3600
+    };
+  }
+  return null;
+}
+
 function setSbSessionFromAuthResponse(data) {
-  const access = data.access_token;
-  const refresh = data.refresh_token;
-  const sec = data.expires_in || 3600;
+  const norm = normalizeSbSessionPayload(data);
+  const access = norm ? norm.access_token : null;
+  const refresh = norm ? norm.refresh_token : null;
+  const sec = (norm && norm.expires_in) || 3600;
   if (!access || !refresh) {
     throw new Error(
       'No session returned. If your project requires email confirmation, confirm your email first or ask your administrator to adjust Auth settings (see docs/USER_AUTH_BACKEND.md).'
@@ -4207,18 +4229,15 @@ async function submitRegister() {
     btn.disabled = true;
     try {
       const data = await supabaseSignUp(emailCheck.value, pw);
-      if (data.session) {
-        setSbSessionFromAuthResponse(data);
-        document.getElementById('auth-reg-pass').value = '';
-        document.getElementById('auth-reg-pass2').value = '';
-        applyAuthVisibility();
-        toast('Account created. You are now signed in.');
-      } else {
-        setAuthError(
-          'auth-err-register',
-          'Account created but you are not signed in yet. Confirm your email if required, or ask your administrator to allow immediate sign-in (see docs/USER_AUTH_BACKEND.md).'
-        );
+      let sessionPayload = normalizeSbSessionPayload(data);
+      if (!sessionPayload) {
+        sessionPayload = normalizeSbSessionPayload(await supabaseSignIn(emailCheck.value, pw));
       }
+      setSbSessionFromAuthResponse(sessionPayload);
+      document.getElementById('auth-reg-pass').value = '';
+      document.getElementById('auth-reg-pass2').value = '';
+      applyAuthVisibility();
+      toast('Account created. You are now signed in.');
     } catch (e) {
       console.error(e);
       setAuthError('auth-err-register', e.message || 'Registration failed. Please try again.');
