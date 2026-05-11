@@ -944,8 +944,8 @@
       <p class="auth-lead" id="auth-lead-signin">Sign in with your account.</p>
       <div class="auth-error" id="auth-err-signin" role="alert"></div>
       <div class="auth-form">
-        <label for="auth-in-user" id="auth-label-in-user">Username</label>
-        <input id="auth-in-user" type="text" autocomplete="username" maxlength="254">
+        <label for="auth-in-user">Email</label>
+        <input id="auth-in-user" type="email" autocomplete="username" maxlength="254" inputmode="email">
         <label for="auth-in-pass">Password</label>
         <input id="auth-in-pass" type="password" autocomplete="current-password" maxlength="128">
       </div>
@@ -959,12 +959,12 @@
 
     <div id="auth-view-register" style="display:none;">
       <h2>Create account</h2>
-      <p class="auth-lead" id="auth-lead-register">Choose a username and a strong password.</p>
+      <p class="auth-lead" id="auth-lead-register">Register with your email and a strong password.</p>
       <div class="auth-error" id="auth-err-register" role="alert"></div>
       <div class="auth-form">
-        <label for="auth-reg-user" id="auth-label-reg-user">Username</label>
-        <input id="auth-reg-user" type="text" autocomplete="username" maxlength="254">
-        <div class="auth-hint" id="auth-hint-reg-user">3–64 characters. Letters, numbers, spaces, dot, underscore or hyphen.</div>
+        <label for="auth-reg-user">Email</label>
+        <input id="auth-reg-user" type="email" autocomplete="email" maxlength="254" inputmode="email">
+        <div class="auth-hint" id="auth-hint-reg-user">Use a valid email address.</div>
         <label for="auth-reg-pass">Password</label>
         <input id="auth-reg-pass" type="password" autocomplete="new-password" maxlength="128">
         <div class="auth-hint">At least 8 characters with one uppercase letter and one special character (!@#$%^&amp;*…).</div>
@@ -3949,19 +3949,6 @@ function saveAuthAccounts(map) {
   localStorage.setItem(AUTH_ACCOUNTS_KEY, JSON.stringify(map));
 }
 
-function normalizeUserKey(name) {
-  return name.trim().toLowerCase();
-}
-
-function validateUsername(name) {
-  const t = name.trim();
-  if (t.length < 3 || t.length > 64) return { ok: false, msg: 'Username must be between 3 and 64 characters.' };
-  if (!/^[a-zA-Z0-9 ._-]+$/.test(t)) {
-    return { ok: false, msg: 'Username may only contain letters, numbers, spaces, dot, underscore or hyphen.' };
-  }
-  return { ok: true, value: t };
-}
-
 function validateWorkEmail(email) {
   const t = (email || '').trim().toLowerCase();
   if (t.length < 5 || t.length > 254) return { ok: false, msg: 'Enter a valid email address.' };
@@ -4058,45 +4045,21 @@ function showAuthView(view) {
 
 function syncAuthLabels() {
   const sb = useSupabaseAuth();
-  const li = document.getElementById('auth-label-in-user');
-  const lr = document.getElementById('auth-label-reg-user');
-  const hi = document.getElementById('auth-hint-reg-user');
-  const inUser = document.getElementById('auth-in-user');
-  const regUser = document.getElementById('auth-reg-user');
   const leadIn = document.getElementById('auth-lead-signin');
   const leadReg = document.getElementById('auth-lead-register');
+  const hi = document.getElementById('auth-hint-reg-user');
   if (sb) {
-    if (li) li.textContent = 'Work email';
-    if (lr) lr.textContent = 'Work email';
-    if (hi) hi.textContent = 'Use your work email. The same account works on any device once Supabase is configured.';
-    if (inUser) {
-      inUser.type = 'email';
-      inUser.autocomplete = 'username';
-    }
-    if (regUser) {
-      regUser.type = 'email';
-      regUser.autocomplete = 'email';
-    }
     if (leadIn) leadIn.textContent = 'Sign in with your work email and password.';
-    if (leadReg) leadReg.textContent = 'Create your account with a work email and a strong password.';
+    if (leadReg) leadReg.textContent = 'Create your account with your work email and a strong password.';
+    if (hi) hi.textContent = 'Your work email is your sign-in. The same account works on any device.';
   } else {
-    if (li) li.textContent = 'Username';
-    if (lr) lr.textContent = 'Username';
-    if (hi) hi.textContent = '3–64 characters. Letters, numbers, spaces, dot, underscore or hyphen.';
-    if (inUser) {
-      inUser.type = 'text';
-      inUser.autocomplete = 'username';
-    }
-    if (regUser) {
-      regUser.type = 'text';
-      regUser.autocomplete = 'username';
-    }
     if (leadIn)
       leadIn.textContent =
-        'Use the account you created on this browser. Passwords are stored only as secure hashes on this device. For accounts that work everywhere, configure Supabase (see docs/USER_AUTH_BACKEND.md).';
+        'Sign in with the email and password you used when you registered on this browser.';
     if (leadReg)
       leadReg.textContent =
-        'Choose a username and a strong password. Accounts are stored only in this browser until hosted auth is configured.';
+        'Register with your email and a strong password. This account is stored only on this browser until hosted sign-in is configured (see docs/USER_AUTH_BACKEND.md).';
+    if (hi) hi.textContent = 'Use a valid email address. For accounts that work on every device, configure Supabase in index.html.';
   }
 }
 
@@ -4179,12 +4142,16 @@ async function submitSignIn() {
     setAuthError('auth-err-signin', 'Secure sign-in requires a modern browser over HTTPS (or localhost).');
     return;
   }
-  const uRaw = document.getElementById('auth-in-user').value;
+  const emailCheck = validateWorkEmail(document.getElementById('auth-in-user').value);
+  if (!emailCheck.ok) {
+    setAuthError('auth-err-signin', emailCheck.msg);
+    return;
+  }
   const pw = document.getElementById('auth-in-pass').value;
-  const key = normalizeUserKey(uRaw);
+  const key = emailCheck.value;
   const acc = authAccounts()[key];
   if (!acc) {
-    setAuthError('auth-err-signin', 'Unknown username or incorrect password.');
+    setAuthError('auth-err-signin', 'Unknown email or incorrect password.');
     return;
   }
   btn.disabled = true;
@@ -4192,7 +4159,7 @@ async function submitSignIn() {
     const salt = b64ToBuf(acc.saltPwd);
     const hash = await pbkdf2Hash(pw, salt);
     if (!timingSafeEqual(hash, b64ToBuf(acc.hashPwd))) {
-      setAuthError('auth-err-signin', 'Unknown username or incorrect password.');
+      setAuthError('auth-err-signin', 'Unknown email or incorrect password.');
       return;
     }
     setLocalSession(key);
@@ -4251,9 +4218,9 @@ async function submitRegister() {
     setAuthError('auth-err-register', 'Registration requires a modern browser over HTTPS (or localhost).');
     return;
   }
-  const uCheck = validateUsername(document.getElementById('auth-reg-user').value);
-  if (!uCheck.ok) {
-    setAuthError('auth-err-register', uCheck.msg);
+  const emailCheck = validateWorkEmail(document.getElementById('auth-reg-user').value);
+  if (!emailCheck.ok) {
+    setAuthError('auth-err-register', emailCheck.msg);
     return;
   }
   const pw = document.getElementById('auth-reg-pass').value;
@@ -4267,10 +4234,10 @@ async function submitRegister() {
     setAuthError('auth-err-register', 'Passwords do not match.');
     return;
   }
-  const key = normalizeUserKey(uCheck.value);
+  const key = emailCheck.value;
   const all = authAccounts();
   if (all[key]) {
-    setAuthError('auth-err-register', 'That username is already taken on this browser.');
+    setAuthError('auth-err-register', 'An account with this email already exists on this browser.');
     return;
   }
   btn.disabled = true;
@@ -4279,7 +4246,7 @@ async function submitRegister() {
     const hashPwd = await pbkdf2Hash(pw, saltPwd);
     all[key] = {
       v: 2,
-      displayName: uCheck.value,
+      displayName: emailCheck.value,
       saltPwd: bufToB64(saltPwd),
       hashPwd: bufToB64(hashPwd),
       iters: PBKDF2_ITERS
