@@ -713,6 +713,211 @@
     color: white;
   }
 
+  /* ── AUTH GATE (sign in / register / reset) ───────────────────────── */
+  #auth-gate {
+    position: fixed;
+    inset: 0;
+    z-index: 20000;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 20px;
+    overflow-y: auto;
+  }
+  #auth-gate::before {
+    content: '';
+    position: absolute;
+    bottom: -100px;
+    right: -100px;
+    width: 400px;
+    height: 400px;
+    border: 1.5px solid rgba(0,20,137,0.06);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .auth-panel {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+    background: white;
+    border: 1.5px solid var(--frame-gray);
+    border-radius: 4px;
+    box-shadow: var(--shadow-lg);
+    padding: 32px 28px 28px;
+  }
+  .auth-panel h2 {
+    font-family: 'Source Serif 4', serif;
+    font-weight: 300;
+    font-size: 26px;
+    color: #001489;
+    margin-bottom: 6px;
+    text-align: center;
+  }
+  .auth-panel .auth-lead {
+    font-size: 13px;
+    color: var(--deep-gray);
+    opacity: 0.75;
+    text-align: center;
+    margin-bottom: 22px;
+    line-height: 1.45;
+  }
+  .auth-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 22px;
+    border-bottom: 1.5px solid var(--frame-gray);
+  }
+  .auth-tabs button {
+    flex: 1;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    padding: 10px 8px;
+    border: none;
+    background: transparent;
+    color: var(--mid-gray);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1.5px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .auth-tabs button:hover { color: #001489; }
+  .auth-tabs button.active {
+    color: #001489;
+    border-bottom-color: #001489;
+  }
+  .auth-form label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--deep-gray);
+    margin-bottom: 6px;
+    margin-top: 14px;
+  }
+  .auth-form label:first-child { margin-top: 0; }
+  .auth-form input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--frame-gray);
+    border-radius: 2px;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .auth-form input:focus { border-color: #001489; }
+  .auth-hint {
+    font-size: 11px;
+    color: var(--mid-gray);
+    margin-top: 5px;
+    line-height: 1.4;
+  }
+  .auth-error {
+    background: var(--salmon-pale);
+    border: 1px solid var(--salmon);
+    color: #5c2d26;
+    font-size: 12px;
+    padding: 10px 12px;
+    border-radius: 2px;
+    margin-bottom: 14px;
+    display: none;
+  }
+  .auth-error.visible { display: block; }
+  .auth-submit {
+    width: 100%;
+    margin-top: 22px;
+    padding: 12px 16px;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: white;
+    background: #001489;
+    border: 1.5px solid #001489;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.15s, box-shadow 0.15s;
+  }
+  .auth-submit:hover {
+    background: #0d1f96;
+    box-shadow: 0 4px 16px rgba(0,20,137,0.22);
+  }
+  .auth-submit:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  .auth-foot {
+    text-align: center;
+    margin-top: 18px;
+    font-size: 12px;
+    color: var(--deep-gray);
+  }
+  .auth-foot button.linkish {
+    background: none;
+    border: none;
+    color: #001489;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 12px;
+    text-decoration: underline;
+    padding: 0;
+  }
+  .auth-foot button.linkish:hover { color: #0d1f96; }
+  .auth-logo-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .auth-logo-badge {
+    width: 48px;
+    height: 38px;
+    background: #001489;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+  }
+  .auth-logo-text {
+    font-family: 'Source Serif 4', serif;
+    font-weight: 300;
+    font-size: 18px;
+    color: #001489;
+  }
+  .sign-out-btn {
+    background: white;
+    border: 1.5px solid var(--frame-gray);
+    color: var(--deep-gray);
+    font-family: 'Exo 2', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 13px;
+    border-radius: 2px;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    transition: all 0.2s;
+    margin-left: 8px;
+  }
+  .sign-out-btn:hover {
+    border-color: #c44;
+    color: #a33;
+    background: #fff5f5;
+  }
+
   @media (max-width: 768px) {
     .header-inner { padding: 0 16px; }
     main { padding: 20px 12px; }
@@ -725,6 +930,55 @@
 </style>
 </head>
 <body>
+
+<!-- ── AUTH (sign in / register) ─────────────────────────────────────── -->
+<div id="auth-gate">
+  <div class="auth-panel">
+    <div class="auth-logo-row">
+      <div class="auth-logo-badge">ucb</div>
+      <div class="auth-logo-text">Pathway Tool</div>
+    </div>
+
+    <div id="auth-view-signin">
+      <h2>Sign in</h2>
+      <p class="auth-lead" id="auth-lead-signin">Sign in with your account.</p>
+      <div class="auth-error" id="auth-err-signin" role="alert"></div>
+      <div class="auth-form">
+        <label for="auth-in-user" id="auth-label-in-user">Username</label>
+        <input id="auth-in-user" type="text" autocomplete="username" maxlength="254">
+        <label for="auth-in-pass">Password</label>
+        <input id="auth-in-pass" type="password" autocomplete="current-password" maxlength="128">
+      </div>
+      <button type="button" class="auth-submit" id="auth-btn-signin" onclick="submitSignIn()">Sign in</button>
+      <div class="auth-foot">
+        No account?
+        <button type="button" class="linkish" onclick="showAuthView('register')">Create one</button>
+      </div>
+      <p class="auth-hint" style="text-align:center;margin-top:14px;margin-bottom:0;">To reset your password, contact your administrator.</p>
+    </div>
+
+    <div id="auth-view-register" style="display:none;">
+      <h2>Create account</h2>
+      <p class="auth-lead" id="auth-lead-register">Choose a username and a strong password.</p>
+      <div class="auth-error" id="auth-err-register" role="alert"></div>
+      <div class="auth-form">
+        <label for="auth-reg-user" id="auth-label-reg-user">Username</label>
+        <input id="auth-reg-user" type="text" autocomplete="username" maxlength="254">
+        <div class="auth-hint" id="auth-hint-reg-user">3–64 characters. Letters, numbers, spaces, dot, underscore or hyphen.</div>
+        <label for="auth-reg-pass">Password</label>
+        <input id="auth-reg-pass" type="password" autocomplete="new-password" maxlength="128">
+        <div class="auth-hint">At least 8 characters with one uppercase letter and one special character (!@#$%^&amp;*…).</div>
+        <label for="auth-reg-pass2">Confirm password</label>
+        <input id="auth-reg-pass2" type="password" autocomplete="new-password" maxlength="128">
+      </div>
+      <button type="button" class="auth-submit" id="auth-btn-register" onclick="submitRegister()">Register</button>
+      <div class="auth-foot">
+        Already have an account?
+        <button type="button" class="linkish" onclick="showAuthView('signin')">Sign in</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ── LANDING PAGE ──────────────────────────────────────────────────── -->
 <div id="landing-page">
@@ -807,6 +1061,9 @@
   </div>
 
   <p class="landing-tagline">Inspired by patients. Driven by science.</p>
+  <p class="landing-tagline" style="margin-top:16px;">
+    <button type="button" onclick="signOut()" style="background:none;border:none;color:#001489;font-weight:700;cursor:pointer;font-family:'Exo 2',sans-serif;font-size:11px;text-decoration:underline;opacity:0.65;">Sign out</button>
+  </p>
 </div>
 
 <!-- ── APP SHELL (hidden until therapy area selected) ──────────────── -->
@@ -824,6 +1081,7 @@
         </div>
       </div>
     </div>
+    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;">
     <nav>
       <button class="active" onclick="showPage('flow', this)">Pathway Flow</button>
       <button onclick="showPage('dashboard', this)">Dashboard</button>
@@ -832,6 +1090,8 @@
       <button onclick="showPage('quadrant', this)">Quadrant</button>
       <button onclick="showPage('pains', this)">Pains &amp; Gains</button>
     </nav>
+    <button type="button" class="sign-out-btn" onclick="signOut()">Sign out</button>
+    </div>
   </div>
 </header>
 
@@ -1691,6 +1951,10 @@ const AT_TOKEN = 'pato9DmsJ3I1EkLYH.0ee7268ad995d9965b1b32b87f9c634bf284f92edfd8
 const AT_BASE  = 'app1ENiTGrD7MARmH';
 const AT_URL   = `https://api.airtable.com/v0/${AT_BASE}`;
 const AT_HEADS = { 'Authorization': `Bearer ${AT_TOKEN}`, 'Content-Type': 'application/json' };
+
+/** Optional hosted auth — set both for sign-in across devices (Supabase). See docs/USER_AUTH_BACKEND.md */
+const SB_URL = 'https://lxckzliwhcpdugacrnqd.supabase.co';
+const SB_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4Y2t6bGl3aGNwZHVnYWNybnFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MDI1OTAsImV4cCI6MjA5NDA3ODU5MH0.F_AXGg9VR6TbNLT-u7JN6lWiEdw_ryoUO-wdxrb4A0Y';
 
 // In-memory cache — everything the app needs
 let stakeholders = [];   // { id, _atId, org, name, role, indication, impact, influence, advocacy, steps, interests, strategy, notes }
@@ -3536,9 +3800,515 @@ document.addEventListener('click', e => {
   if (bar && !bar.contains(e.target)) hideTrustDropdown();
 });
 
+// ─── AUTH (optional Supabase cross-device, or local PBKDF2) ──────────────────
+
+const AUTH_SESSION_KEY = 'ucb_auth_session_v1';
+const AUTH_ACCOUNTS_KEY = 'ucb_local_accounts_v1';
+const PBKDF2_ITERS = 210000;
+const SESSION_MS_LOCAL = 12 * 60 * 60 * 1000; // 12 hours
+
+function useSupabaseAuth() {
+  const u = (typeof SB_URL === 'string' ? SB_URL : '').trim();
+  const k = (typeof SB_ANON_KEY === 'string' ? SB_ANON_KEY : '').trim();
+  return u.length > 0 && k.length > 0 && u.startsWith('https://');
+}
+
+function sbApiBase() {
+  return SB_URL.trim().replace(/\/$/, '');
+}
+
+function sbHeaders(bearerOverride) {
+  const key = SB_ANON_KEY.trim();
+  return {
+    'Content-Type': 'application/json',
+    apikey: key,
+    Authorization: `Bearer ${bearerOverride || key}`
+  };
+}
+
+async function supabaseSignIn(email, password) {
+  const res = await fetch(`${sbApiBase()}/auth/v1/token?grant_type=password`, {
+    method: 'POST',
+    headers: sbHeaders(),
+    body: JSON.stringify({ email, password })
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg =
+      data.error_description || data.msg || data.message || data.error || 'Invalid email or password.';
+    throw new Error(msg);
+  }
+  return data;
+}
+
+async function supabaseSignUp(email, password) {
+  const res = await fetch(`${sbApiBase()}/auth/v1/signup`, {
+    method: 'POST',
+    headers: sbHeaders(),
+    body: JSON.stringify({ email, password })
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg =
+      data.msg || data.error_description || data.message || data.error || `Registration failed (${res.status}).`;
+    throw new Error(msg);
+  }
+  return data;
+}
+
+function setSbSessionFromAuthResponse(data) {
+  const access = data.access_token;
+  const refresh = data.refresh_token;
+  const sec = data.expires_in || 3600;
+  if (!access || !refresh) {
+    throw new Error(
+      'No session returned. If your project requires email confirmation, confirm your email first or ask your administrator to adjust Auth settings (see docs/USER_AUTH_BACKEND.md).'
+    );
+  }
+  sessionStorage.setItem(
+    AUTH_SESSION_KEY,
+    JSON.stringify({
+      kind: 'sb',
+      access_token: access,
+      refresh_token: refresh,
+      exp: Date.now() + sec * 1000
+    })
+  );
+}
+
+async function supabaseRefreshTokens() {
+  const raw = sessionStorage.getItem(AUTH_SESSION_KEY);
+  if (!raw) return false;
+  let o;
+  try {
+    o = JSON.parse(raw);
+  } catch {
+    return false;
+  }
+  if (o.kind !== 'sb' || !o.refresh_token) return false;
+  const res = await fetch(`${sbApiBase()}/auth/v1/token?grant_type=refresh_token`, {
+    method: 'POST',
+    headers: sbHeaders(),
+    body: JSON.stringify({ refresh_token: o.refresh_token })
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    clearSession();
+    return false;
+  }
+  setSbSessionFromAuthResponse(data);
+  return true;
+}
+
+async function ensureAuthSessionFresh() {
+  const raw = sessionStorage.getItem(AUTH_SESSION_KEY);
+  if (!raw) return;
+  let o;
+  try {
+    o = JSON.parse(raw);
+  } catch {
+    return;
+  }
+  if (o.kind !== 'sb') return;
+  if (o.exp > Date.now() + 120000) return;
+  await supabaseRefreshTokens();
+}
+
+function authAccounts() {
+  try {
+    const raw = localStorage.getItem(AUTH_ACCOUNTS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveAuthAccounts(map) {
+  localStorage.setItem(AUTH_ACCOUNTS_KEY, JSON.stringify(map));
+}
+
+function normalizeUserKey(name) {
+  return name.trim().toLowerCase();
+}
+
+function validateUsername(name) {
+  const t = name.trim();
+  if (t.length < 3 || t.length > 64) return { ok: false, msg: 'Username must be between 3 and 64 characters.' };
+  if (!/^[a-zA-Z0-9 ._-]+$/.test(t)) {
+    return { ok: false, msg: 'Username may only contain letters, numbers, spaces, dot, underscore or hyphen.' };
+  }
+  return { ok: true, value: t };
+}
+
+function validateWorkEmail(email) {
+  const t = (email || '').trim().toLowerCase();
+  if (t.length < 5 || t.length > 254) return { ok: false, msg: 'Enter a valid email address.' };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t)) return { ok: false, msg: 'Enter a valid email address.' };
+  return { ok: true, value: t };
+}
+
+function validatePasswordComplexity(pw) {
+  if (typeof pw !== 'string' || pw.length < 8) {
+    return { ok: false, msg: 'Password must be at least 8 characters.' };
+  }
+  if (!/[A-Z]/.test(pw)) {
+    return { ok: false, msg: 'Password must include at least one uppercase letter.' };
+  }
+  if (!/[^a-zA-Z0-9]/.test(pw)) {
+    return { ok: false, msg: 'Password must include at least one special character (for example !@#$%).' };
+  }
+  return { ok: true };
+}
+
+function bufToB64(buf) {
+  const bytes = new Uint8Array(buf);
+  let s = '';
+  for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return btoa(s);
+}
+
+function b64ToBuf(b64) {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+function randomSalt(len = 16) {
+  const a = new Uint8Array(len);
+  crypto.getRandomValues(a);
+  return a;
+}
+
+function timingSafeEqual(a, b) {
+  if (a.length !== b.length) return false;
+  let x = 0;
+  for (let i = 0; i < a.length; i++) x |= a[i] ^ b[i];
+  return x === 0;
+}
+
+async function pbkdf2Hash(password, saltBytes) {
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    enc.encode(password),
+    'PBKDF2',
+    false,
+    ['deriveBits']
+  );
+  const bits = await crypto.subtle.deriveBits(
+    {
+      name: 'PBKDF2',
+      salt: saltBytes,
+      iterations: PBKDF2_ITERS,
+      hash: 'SHA-256'
+    },
+    keyMaterial,
+    256
+  );
+  return new Uint8Array(bits);
+}
+
+function authCryptoReady() {
+  return typeof crypto !== 'undefined' && crypto.subtle && typeof localStorage !== 'undefined';
+}
+
+function setAuthError(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (!msg) {
+    el.textContent = '';
+    el.classList.remove('visible');
+    return;
+  }
+  el.textContent = msg;
+  el.classList.add('visible');
+}
+
+function showAuthView(view) {
+  const signin = document.getElementById('auth-view-signin');
+  const reg = document.getElementById('auth-view-register');
+  if (signin) signin.style.display = view === 'signin' ? 'block' : 'none';
+  if (reg) reg.style.display = view === 'register' ? 'block' : 'none';
+  setAuthError('auth-err-signin', '');
+  setAuthError('auth-err-register', '');
+}
+
+function syncAuthLabels() {
+  const sb = useSupabaseAuth();
+  const li = document.getElementById('auth-label-in-user');
+  const lr = document.getElementById('auth-label-reg-user');
+  const hi = document.getElementById('auth-hint-reg-user');
+  const inUser = document.getElementById('auth-in-user');
+  const regUser = document.getElementById('auth-reg-user');
+  const leadIn = document.getElementById('auth-lead-signin');
+  const leadReg = document.getElementById('auth-lead-register');
+  if (sb) {
+    if (li) li.textContent = 'Work email';
+    if (lr) lr.textContent = 'Work email';
+    if (hi) hi.textContent = 'Use your work email. The same account works on any device once Supabase is configured.';
+    if (inUser) {
+      inUser.type = 'email';
+      inUser.autocomplete = 'username';
+    }
+    if (regUser) {
+      regUser.type = 'email';
+      regUser.autocomplete = 'email';
+    }
+    if (leadIn) leadIn.textContent = 'Sign in with your work email and password.';
+    if (leadReg) leadReg.textContent = 'Create your account with a work email and a strong password.';
+  } else {
+    if (li) li.textContent = 'Username';
+    if (lr) lr.textContent = 'Username';
+    if (hi) hi.textContent = '3–64 characters. Letters, numbers, spaces, dot, underscore or hyphen.';
+    if (inUser) {
+      inUser.type = 'text';
+      inUser.autocomplete = 'username';
+    }
+    if (regUser) {
+      regUser.type = 'text';
+      regUser.autocomplete = 'username';
+    }
+    if (leadIn)
+      leadIn.textContent =
+        'Use the account you created on this browser. Passwords are stored only as secure hashes on this device. For accounts that work everywhere, configure Supabase (see docs/USER_AUTH_BACKEND.md).';
+    if (leadReg)
+      leadReg.textContent =
+        'Choose a username and a strong password. Accounts are stored only in this browser until hosted auth is configured.';
+  }
+}
+
+function isSessionValid() {
+  try {
+    const raw = sessionStorage.getItem(AUTH_SESSION_KEY);
+    if (!raw) return false;
+    const o = JSON.parse(raw);
+    if (o.kind === 'sb') {
+      return !!(o.access_token && typeof o.exp === 'number' && Date.now() < o.exp);
+    }
+    const key = o.accountKey;
+    const kind = o.kind || (key ? 'local' : '');
+    if (kind === 'local' || (key && !o.kind)) {
+      if (!key || typeof o.exp !== 'number' || Date.now() > o.exp) return false;
+      return !!authAccounts()[key];
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+function setLocalSession(accountKey) {
+  sessionStorage.setItem(
+    AUTH_SESSION_KEY,
+    JSON.stringify({
+      kind: 'local',
+      accountKey,
+      exp: Date.now() + SESSION_MS_LOCAL
+    })
+  );
+}
+
+function clearSession() {
+  sessionStorage.removeItem(AUTH_SESSION_KEY);
+}
+
+function applyAuthVisibility() {
+  const gate = document.getElementById('auth-gate');
+  const land = document.getElementById('landing-page');
+  const shell = document.getElementById('app-shell');
+  if (!gate || !land || !shell) return;
+  if (isSessionValid()) {
+    gate.style.display = 'none';
+    if (shell.style.display !== 'block') land.style.display = 'flex';
+  } else {
+    gate.style.display = 'flex';
+    land.style.display = 'none';
+    shell.style.display = 'none';
+  }
+}
+
+async function submitSignIn() {
+  const btn = document.getElementById('auth-btn-signin');
+  if (useSupabaseAuth()) {
+    const emailCheck = validateWorkEmail(document.getElementById('auth-in-user').value);
+    const pw = document.getElementById('auth-in-pass').value;
+    if (!emailCheck.ok) {
+      setAuthError('auth-err-signin', emailCheck.msg);
+      return;
+    }
+    btn.disabled = true;
+    try {
+      const data = await supabaseSignIn(emailCheck.value, pw);
+      setSbSessionFromAuthResponse(data);
+      document.getElementById('auth-in-pass').value = '';
+      applyAuthVisibility();
+      toast('Signed in successfully');
+    } catch (e) {
+      console.error(e);
+      setAuthError('auth-err-signin', e.message || 'Sign-in failed. Please try again.');
+    } finally {
+      btn.disabled = false;
+    }
+    return;
+  }
+
+  if (!authCryptoReady()) {
+    setAuthError('auth-err-signin', 'Secure sign-in requires a modern browser over HTTPS (or localhost).');
+    return;
+  }
+  const uRaw = document.getElementById('auth-in-user').value;
+  const pw = document.getElementById('auth-in-pass').value;
+  const key = normalizeUserKey(uRaw);
+  const acc = authAccounts()[key];
+  if (!acc) {
+    setAuthError('auth-err-signin', 'Unknown username or incorrect password.');
+    return;
+  }
+  btn.disabled = true;
+  try {
+    const salt = b64ToBuf(acc.saltPwd);
+    const hash = await pbkdf2Hash(pw, salt);
+    if (!timingSafeEqual(hash, b64ToBuf(acc.hashPwd))) {
+      setAuthError('auth-err-signin', 'Unknown username or incorrect password.');
+      return;
+    }
+    setLocalSession(key);
+    document.getElementById('auth-in-pass').value = '';
+    applyAuthVisibility();
+    toast('Signed in successfully');
+  } catch (e) {
+    console.error(e);
+    setAuthError('auth-err-signin', 'Sign-in failed. Please try again.');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function submitRegister() {
+  const btn = document.getElementById('auth-btn-register');
+  if (useSupabaseAuth()) {
+    const emailCheck = validateWorkEmail(document.getElementById('auth-reg-user').value);
+    const pw = document.getElementById('auth-reg-pass').value;
+    const pw2 = document.getElementById('auth-reg-pass2').value;
+    if (!emailCheck.ok) {
+      setAuthError('auth-err-register', emailCheck.msg);
+      return;
+    }
+    const pwc = validatePasswordComplexity(pw);
+    if (!pwc.ok) {
+      setAuthError('auth-err-register', pwc.msg);
+      return;
+    }
+    if (pw !== pw2) {
+      setAuthError('auth-err-register', 'Passwords do not match.');
+      return;
+    }
+    btn.disabled = true;
+    try {
+      const data = await supabaseSignUp(emailCheck.value, pw);
+      if (data.session) {
+        setSbSessionFromAuthResponse(data);
+        document.getElementById('auth-reg-pass').value = '';
+        document.getElementById('auth-reg-pass2').value = '';
+        applyAuthVisibility();
+        toast('Account created. You are now signed in.');
+      } else {
+        setAuthError(
+          'auth-err-register',
+          'Account created but you are not signed in yet. Confirm your email if required, or ask your administrator to allow immediate sign-in (see docs/USER_AUTH_BACKEND.md).'
+        );
+      }
+    } catch (e) {
+      console.error(e);
+      setAuthError('auth-err-register', e.message || 'Registration failed. Please try again.');
+    } finally {
+      btn.disabled = false;
+    }
+    return;
+  }
+
+  if (!authCryptoReady()) {
+    setAuthError('auth-err-register', 'Registration requires a modern browser over HTTPS (or localhost).');
+    return;
+  }
+  const uCheck = validateUsername(document.getElementById('auth-reg-user').value);
+  if (!uCheck.ok) {
+    setAuthError('auth-err-register', uCheck.msg);
+    return;
+  }
+  const pw = document.getElementById('auth-reg-pass').value;
+  const pw2 = document.getElementById('auth-reg-pass2').value;
+  const pwc = validatePasswordComplexity(pw);
+  if (!pwc.ok) {
+    setAuthError('auth-err-register', pwc.msg);
+    return;
+  }
+  if (pw !== pw2) {
+    setAuthError('auth-err-register', 'Passwords do not match.');
+    return;
+  }
+  const key = normalizeUserKey(uCheck.value);
+  const all = authAccounts();
+  if (all[key]) {
+    setAuthError('auth-err-register', 'That username is already taken on this browser.');
+    return;
+  }
+  btn.disabled = true;
+  try {
+    const saltPwd = randomSalt();
+    const hashPwd = await pbkdf2Hash(pw, saltPwd);
+    all[key] = {
+      v: 2,
+      displayName: uCheck.value,
+      saltPwd: bufToB64(saltPwd),
+      hashPwd: bufToB64(hashPwd),
+      iters: PBKDF2_ITERS
+    };
+    saveAuthAccounts(all);
+    setLocalSession(key);
+    document.getElementById('auth-reg-pass').value = '';
+    document.getElementById('auth-reg-pass2').value = '';
+    applyAuthVisibility();
+    toast('Account created. You are now signed in.');
+  } catch (e) {
+    console.error(e);
+    setAuthError('auth-err-register', 'Registration failed. Please try again.');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function signOut() {
+  clearSession();
+  document.getElementById('app-shell').style.display = 'none';
+  document.getElementById('landing-page').style.display = 'none';
+  document.getElementById('auth-gate').style.display = 'flex';
+  showAuthView('signin');
+  const p = document.getElementById('auth-in-pass');
+  if (p) p.value = '';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const gate = document.getElementById('auth-gate');
+  if (!gate || gate.style.display === 'none') return;
+  const signin = document.getElementById('auth-view-signin');
+  const reg = document.getElementById('auth-view-register');
+  if (signin && signin.style.display !== 'none') submitSignIn();
+  else if (reg && reg.style.display !== 'none') submitRegister();
+});
+
 // ─── LANDING PAGE ────────────────────────────────────────────────────────────
 
 function enterApp(area) {
+  if (!isSessionValid()) {
+    toast('Please sign in to continue');
+    document.getElementById('auth-gate').style.display = 'flex';
+    document.getElementById('landing-page').style.display = 'none';
+    showAuthView('signin');
+    return;
+  }
   if (area !== 'rheumatology') return; // only rheumatology active
   document.getElementById('landing-page').style.display = 'none';
   document.getElementById('app-shell').style.display = 'block';
@@ -3561,6 +4331,13 @@ function goHome() {
 // ─── INIT ────────────────────────────────────────────────────────────────────
 
 (async () => {
+  try {
+    await ensureAuthSessionFresh();
+  } catch (e) {
+    console.warn('Session refresh:', e);
+  }
+  syncAuthLabels();
+  applyAuthVisibility();
   // Load data silently in background — don't show overlay so landing page stays clickable
   try {
     await loadAllData(true); // silent = true
