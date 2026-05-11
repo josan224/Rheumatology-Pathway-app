@@ -1953,8 +1953,8 @@ const AT_URL   = `https://api.airtable.com/v0/${AT_BASE}`;
 const AT_HEADS = { 'Authorization': `Bearer ${AT_TOKEN}`, 'Content-Type': 'application/json' };
 
 /** Optional hosted auth — set both for sign-in across devices (Supabase). See docs/USER_AUTH_BACKEND.md */
-const SB_URL = '';
-const SB_ANON_KEY = '';
+const SB_URL = 'https://lxckzliwhcpdugacrnqd.supabase.co';
+const SB_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4Y2t6bGl3aGNwZHVnYWNybnFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MDI1OTAsImV4cCI6MjA5NDA3ODU5MH0.F_AXGg9VR6TbNLT-u7JN6lWiEdw_ryoUO-wdxrb4A0Y';
 
 // In-memory cache — everything the app needs
 let stakeholders = [];   // { id, _atId, org, name, role, indication, impact, influence, advocacy, steps, interests, strategy, notes }
