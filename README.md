@@ -25,6 +25,7 @@ Setup for new environments:
 
 1. Follow **[docs/USER_AUTH_BACKEND.md](docs/USER_AUTH_BACKEND.md)** for Auth and API keys (`SB_URL`, `SB_ANON_KEY` in `index.html`).
 2. Run **[docs/supabase_schema.sql](docs/supabase_schema.sql)** once in the Supabase SQL Editor to create the `stakeholders`, `pathway_roles`, and `pains_gains` tables.
+3. To promote **super-admins** (access all workspaces), see **[docs/SUPER_ADMINS.md](docs/SUPER_ADMINS.md)**.
 
 ### If something stops saving or loading
 

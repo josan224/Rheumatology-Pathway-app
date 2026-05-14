@@ -1105,6 +1105,14 @@
   gap: 12px;
   flex-wrap: wrap;
 ">
+  <div id="super-owner-wrap" style="display:none;align-items:center;gap:8px;flex-wrap:wrap;">
+    <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#001489;white-space:nowrap;">Workspace</span>
+    <select id="super-owner-select" onchange="onSuperOwnerFilterChange(this.value)"
+      style="padding:6px 10px;border:1.5px solid var(--frame-gray);border-radius:2px;font-family:'Exo 2',sans-serif;font-size:13px;outline:none;background:white;color:var(--deep-gray);min-width:220px;max-width:320px;">
+      <option value="">All users</option>
+    </select>
+    <span id="super-readonly-hint" style="display:none;font-size:11px;color:#A84544;font-weight:600;">Read-only (another user’s data)</span>
+  </div>
   <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#001489;white-space:nowrap;">Filter by Trust</span>
 
   <!-- Region quick-select -->
@@ -1544,7 +1552,7 @@
         </div>
         <div style="display:flex;gap:10px;">
           <button class="btn btn-outline btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
-          <button class="btn btn-outline btn-sm" onclick="clearAll()">🗑 Clear All</button>
+          <button type="button" class="btn btn-outline btn-sm" data-super-ro-control="1" onclick="clearAll()">🗑 Clear All</button>
         </div>
       </div>
 
@@ -1610,6 +1618,7 @@
           <thead>
             <tr>
               <th>Organisation</th>
+              <th id="th-stakeholder-owner" style="display:none;">Owner</th>
               <th>Name</th>
               <th>Title</th>
               <th>Role</th>
@@ -1635,7 +1644,7 @@
         <h1 style="font-family:'Source Serif 4',serif;font-size:28px;color:var(--slate);margin-bottom:4px;">Pathway Map</h1>
         <p style="color:var(--slate-light);font-size:14px;">Core clinical pathway with condition-specific variations. Click ✏ on any row to edit roles.</p>
       </div>
-      <button class="btn btn-outline btn-sm" onclick="resetFlowRoles()">↺ Reset roles</button>
+      <button type="button" class="btn btn-outline btn-sm" data-super-ro-control="1" onclick="resetFlowRoles()">↺ Reset roles</button>
     </div>
     <div class="card" style="padding:0;overflow:hidden;">
       <div style="overflow-x:auto;">
@@ -1707,7 +1716,7 @@
         </div>
       </div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-        <button class="btn btn-primary" onclick="addPainGain()">➕ Save Entry</button>
+        <button type="button" class="btn btn-primary" data-super-ro-control="1" onclick="addPainGain()">➕ Save Entry</button>
         <button class="btn btn-outline" onclick="clearPGForm()">Clear</button>
       </div>
     </div>
@@ -1838,7 +1847,7 @@
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <button class="btn btn-outline btn-sm" onclick="printFlow()">🖨 Print / Export</button>
-        <button class="btn btn-outline btn-sm" onclick="resetFlowRoles()">↺ Reset roles</button>
+        <button type="button" class="btn btn-outline btn-sm" data-super-ro-control="1" onclick="resetFlowRoles()">↺ Reset roles</button>
       </div>
     </div>
 
@@ -1957,6 +1966,10 @@ let trustRoles = {};
 let painGains = [];
 let flowRoles = {};
 
+let currentUserIsSuper = false;
+let selectedDataOwnerUserId = null;
+let dataOwnerDirectory = [];
+
 const AUTH_SESSION_KEY = 'ucb_auth_session_v1';
 const AUTH_ACCOUNTS_KEY = 'ucb_local_accounts_v1';
 
@@ -2009,11 +2022,124 @@ async function sbRest(path, init = {}) {
   return JSON.parse(txt);
 }
 
+function decodeJwtPayload(token) {
+  if (!token || typeof token !== 'string') return null;
+  const parts = token.split('.');
+  if (parts.length < 2) return null;
+  let b = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+  while (b.length % 4) b += '=';
+  try {
+    return JSON.parse(atob(b));
+  } catch {
+    return null;
+  }
+}
+
+function getAuthUserId() {
+  const pl = decodeJwtPayload(getSbAccessToken());
+  return pl && pl.sub ? pl.sub : null;
+}
+
+/** PostgREST filter: when super has picked one workspace, scope reads to that user_id. */
+function sbOwnerFilterQuery() {
+  if (!currentUserIsSuper || !selectedDataOwnerUserId) return '';
+  return `&user_id=eq.${encodeURIComponent(selectedDataOwnerUserId)}`;
+}
+
+function isSuperReadOnlyView() {
+  if (!currentUserIsSuper) return false;
+  const me = getAuthUserId();
+  if (!selectedDataOwnerUserId || !me) return false;
+  return selectedDataOwnerUserId !== me;
+}
+
+function ownerEmailLabel(userId) {
+  if (!userId) return '—';
+  const hit = dataOwnerDirectory.find(d => d.user_id === userId);
+  if (hit && hit.email) return hit.email;
+  return String(userId).slice(0, 8) + '…';
+}
+
+async function refreshSuperAdminState() {
+  currentUserIsSuper = false;
+  dataOwnerDirectory = [];
+  const wrap = document.getElementById('super-owner-wrap');
+  const sel = document.getElementById('super-owner-select');
+  if (!wrap || !sel) return;
+  wrap.style.display = 'none';
+  const tok = getSbAccessToken();
+  if (!useSupabaseAuth() || !tok) return;
+  const sub = getAuthUserId();
+  if (!sub) return;
+  const prev = selectedDataOwnerUserId;
+  try {
+    const rows = await sbRest(`super_admins?select=user_id&user_id=eq.${encodeURIComponent(sub)}`);
+    currentUserIsSuper = Array.isArray(rows) && rows.length > 0;
+    if (!currentUserIsSuper) {
+      selectedDataOwnerUserId = null;
+      updateSuperOwnerUiHints();
+      return;
+    }
+    wrap.style.display = 'flex';
+    const owners = await sbRest('rpc/list_data_owner_directory', { method: 'POST', body: {} });
+    dataOwnerDirectory = Array.isArray(owners) ? owners : [];
+    sel.innerHTML = '<option value="">All users</option>';
+    dataOwnerDirectory.forEach(o => {
+      const opt = document.createElement('option');
+      opt.value = o.user_id;
+      opt.textContent = o.email || o.user_id;
+      sel.appendChild(opt);
+    });
+    if (prev && dataOwnerDirectory.some(d => d.user_id === prev)) {
+      selectedDataOwnerUserId = prev;
+      sel.value = prev;
+    } else {
+      selectedDataOwnerUserId = null;
+      sel.value = '';
+    }
+  } catch (e) {
+    console.warn('Super admin state:', e);
+    currentUserIsSuper = false;
+    selectedDataOwnerUserId = null;
+    if (wrap) wrap.style.display = 'none';
+  }
+  updateSuperOwnerUiHints();
+}
+
+function onSuperOwnerFilterChange(val) {
+  selectedDataOwnerUserId = val || null;
+  updateSuperOwnerUiHints();
+  void (async () => {
+    try {
+      await loadAllData(true);
+      refreshCurrentPage();
+    } catch (e) {
+      console.error(e);
+    }
+  })();
+}
+
+function updateSuperOwnerUiHints() {
+  const hint = document.getElementById('super-readonly-hint');
+  if (hint) hint.style.display = isSuperReadOnlyView() ? 'inline' : 'none';
+  updateSuperReadOnlyFormState();
+}
+
+function updateSuperReadOnlyFormState() {
+  const ro = isSuperReadOnlyView();
+  const b = document.getElementById('reg-save-btn');
+  if (b) b.disabled = ro;
+  document.querySelectorAll('[data-super-ro-control="1"]').forEach(el => {
+    el.disabled = ro;
+  });
+}
+
 function stakeholderFromRow(row) {
   const steps = Array.isArray(row.steps) ? row.steps : [];
   return {
     _atId: row.id,
     id: row.id,
+    ownerUserId: row.user_id || null,
     org: row.org || '',
     name: row.name || '',
     title: row.title || '',
@@ -2056,10 +2182,11 @@ async function loadAllData(silent = false) {
 
   if (!silent) setLoading(true, 'Loading your data…');
   try {
-    const sRows = (await sbRest('stakeholders?select=*&order=created_at.asc')) || [];
+    const q = sbOwnerFilterQuery();
+    const sRows = (await sbRest(`stakeholders?select=*${q}&order=created_at.asc`)) || [];
     stakeholders = (Array.isArray(sRows) ? sRows : []).map(stakeholderFromRow);
 
-    const rRows = (await sbRest('pathway_roles?select=*&order=step_number.asc')) || [];
+    const rRows = (await sbRest(`pathway_roles?select=*${q}&order=step_number.asc`)) || [];
     flowRoles = {};
     trustRoles = {};
     (Array.isArray(rRows) ? rRows : []).forEach(row => {
@@ -2067,6 +2194,7 @@ async function loadAllData(silent = false) {
       if (!num) return;
       const entry = {
         _atId: row.id,
+        ownerUserId: row.user_id || null,
         leads: row.leads ? row.leads.split('|').filter(Boolean) : [],
         supports: row.supports ? row.supports.split('|').filter(Boolean) : []
       };
@@ -2082,7 +2210,7 @@ async function loadAllData(silent = false) {
       if (!flowRoles[+k]) flowRoles[+k] = { _atId: null, leads: [...v.leads], supports: [...v.supports] };
     });
 
-    const pgRows = (await sbRest('pains_gains?select=*&order=created_at.asc')) || [];
+    const pgRows = (await sbRest(`pains_gains?select=*${q}&order=created_at.asc`)) || [];
     painGains = (Array.isArray(pgRows) ? pgRows : []).map(r => {
       const rawPain = r.pain || '';
       const rawGain = r.gain || '';
@@ -2102,6 +2230,7 @@ async function loadAllData(silent = false) {
       return {
         _atId: r.id,
         id: r.id,
+        ownerUserId: r.user_id || null,
         stakeholderId: roleKey || roleLabel || 'Other',
         stakeholderName: roleLabel || roleKey,
         stakeholderOrg: trustVal,
@@ -2207,6 +2336,10 @@ function getRoleValue() {
 // ─── SAVE / EDIT STAKEHOLDER ─────────────────────────────────────────────────
 
 async function saveStakeholder() {
+  if (isSuperReadOnlyView()) {
+    toast('Read-only: switch Workspace to your account (or All users) to add or edit stakeholders.');
+    return;
+  }
   const org  = getOrgValue();
   const role = getRoleValue();
   if (!org || !role) { toast('Organisation and Role are required'); return; }
@@ -2261,6 +2394,10 @@ async function saveStakeholder() {
 }
 
 async function deleteStakeholder(id) {
+  if (isSuperReadOnlyView()) {
+    toast('Read-only: you cannot delete from another user’s workspace in this view.');
+    return;
+  }
   if (!confirm('Delete this stakeholder?')) return;
   setLoading(true, 'Deleting…');
   try {
@@ -2280,25 +2417,53 @@ async function deleteStakeholder(id) {
 }
 
 async function clearAll() {
+  if (isSuperReadOnlyView()) {
+    toast('Read-only: switch Workspace before clearing data.');
+    return;
+  }
+  if (currentUserIsSuper && !selectedDataOwnerUserId) {
+    toast('Select a single workspace in the Workspace filter to clear that account’s data, or use the SQL editor for bulk operations.');
+    return;
+  }
   if (!confirm('Delete ALL stakeholders and pain/gain entries? This cannot be undone.')) return;
   setLoading(true, 'Clearing all data…');
   try {
+    if (currentUserIsSuper && selectedDataOwnerUserId) {
+      await sbRest(`stakeholders?user_id=eq.${encodeURIComponent(selectedDataOwnerUserId)}`, { method: 'DELETE' });
+      await sbRest(`pains_gains?user_id=eq.${encodeURIComponent(selectedDataOwnerUserId)}`, { method: 'DELETE' });
+      await sbRest(`pathway_roles?user_id=eq.${encodeURIComponent(selectedDataOwnerUserId)}`, { method: 'DELETE' });
+      await loadAllData(true);
+      renderRegister();
+      updatePGDropdown();
+      refreshCurrentPage();
+      toast('Cleared data for selected workspace');
+      setLoading(false);
+      return;
+    }
     for (const s of [...stakeholders]) {
       await sbRest(`stakeholders?id=eq.${encodeURIComponent(s._atId)}`, { method: 'DELETE' });
     }
     for (const p of [...painGains]) {
       if (p._atId) await sbRest(`pains_gains?id=eq.${encodeURIComponent(p._atId)}`, { method: 'DELETE' });
     }
-    stakeholders = []; painGains = [];
-    renderRegister(); updatePGDropdown();
+    stakeholders = [];
+    painGains = [];
+    renderRegister();
+    updatePGDropdown();
     toast('All data cleared');
-  } catch (e) { toast('⚠ Clear failed: ' + e.message); }
+  } catch (e) {
+    toast('⚠ Clear failed: ' + e.message);
+  }
   setLoading(false);
 }
 
 // ─── DATA LAYER — PATHWAY ROLES ──────────────────────────────────────────────
 
 async function saveFlowRoles() {
+  if (isSuperReadOnlyView()) {
+    toast('Read-only: switch Workspace to save pathway roles.');
+    return;
+  }
   const step     = editingStep;
   const trust    = getActiveTrust();
   const newRoles = { leads: [...editLeads], supports: [...editSupports] };
@@ -2347,27 +2512,44 @@ async function saveFlowRoles() {
 }
 
 async function resetFlowRoles() {
+  if (isSuperReadOnlyView()) {
+    toast('Read-only: switch Workspace to reset pathway roles.');
+    return;
+  }
+  if (currentUserIsSuper && !selectedDataOwnerUserId) {
+    toast('Select a workspace in the Workspace filter to reset that user’s pathway roles.');
+    return;
+  }
   if (!confirm('Reset all pathway roles to defaults? This will replace your saved pathway roles. Continue?')) return;
   setLoading(true, 'Resetting roles…');
   try {
-    await sbRest('pathway_roles', { method: 'DELETE' });
+    const delUrl =
+      currentUserIsSuper && selectedDataOwnerUserId
+        ? `pathway_roles?user_id=eq.${encodeURIComponent(selectedDataOwnerUserId)}`
+        : 'pathway_roles';
+    await sbRest(delUrl, { method: 'DELETE' });
     flowRoles = {};
     trustRoles = {};
+    const targetUid =
+      currentUserIsSuper && selectedDataOwnerUserId ? selectedDataOwnerUserId : null;
     for (const [k, v] of Object.entries(DEFAULT_FLOW_ROLES)) {
       const stepNum = +k;
+      const body = {
+        step_number: stepNum,
+        trust: '',
+        leads: v.leads.join('|'),
+        supports: v.supports.join('|')
+      };
+      if (targetUid && targetUid !== getAuthUserId()) body.user_id = targetUid;
       const rows = await sbRest('pathway_roles', {
         method: 'POST',
         headers: { Prefer: 'return=representation' },
-        body: {
-          step_number: stepNum,
-          trust: '',
-          leads: v.leads.join('|'),
-          supports: v.supports.join('|')
-        }
+        body
       });
       const rec = Array.isArray(rows) ? rows[0] : rows;
       flowRoles[stepNum] = {
         _atId: rec && rec.id ? rec.id : null,
+        ownerUserId: rec && rec.user_id ? rec.user_id : targetUid || getAuthUserId(),
         leads: [...v.leads],
         supports: [...v.supports]
       };
@@ -2375,13 +2557,19 @@ async function resetFlowRoles() {
     if (document.getElementById('page-flow').classList.contains('active')) renderFlow();
     if (document.getElementById('page-pathway').classList.contains('active')) renderPathway();
     toast('Roles reset to defaults ✓');
-  } catch (e) { toast('⚠ Reset failed: ' + e.message); }
+  } catch (e) {
+    toast('⚠ Reset failed: ' + e.message);
+  }
   setLoading(false);
 }
 
 // ─── DATA LAYER — PAINS & GAINS ──────────────────────────────────────────────
 
 async function addPainGain() {
+  if (isSuperReadOnlyView()) {
+    toast('Read-only: switch Workspace to add pains & gains.');
+    return;
+  }
   const role  = document.getElementById('pg-role-template').value;
   const trust = document.getElementById('pg-trust').value.trim();
   const pain  = document.getElementById('pg-pain').value.trim();
@@ -2431,6 +2619,10 @@ async function addPainGain() {
 }
 
 async function deletePG(roleKey, trustKey = '') {
+  if (isSuperReadOnlyView()) {
+    toast('Read-only: switch Workspace to remove entries.');
+    return;
+  }
   if (!roleKey) { toast('No role specified'); return; }
   const trustFilter = (trustKey === 'Generic (all trusts)') ? '' : trustKey;
 
@@ -2590,6 +2782,10 @@ function clearRegForm() {
 }
 
 function editStakeholder(id) {
+  if (isSuperReadOnlyView()) {
+    toast('Read-only: switch Workspace to edit stakeholders.');
+    return;
+  }
   const s = stakeholders.find(st => st._atId === id);
   if (!s) { toast('Stakeholder not found'); return; }
 
@@ -2736,11 +2932,16 @@ function renderRegister() {
   });
 
   const tbody = document.getElementById('register-tbody');
+  const thOwner = document.getElementById('th-stakeholder-owner');
+  if (thOwner) thOwner.style.display = currentUserIsSuper ? '' : 'none';
+  const colSpan = currentUserIsSuper ? 12 : 11;
+  const canEditRow = !isSuperReadOnlyView();
   document.getElementById('register-count').textContent =
     `${stakeholders.length} stakeholder${stakeholders.length !== 1 ? 's' : ''} recorded`;
 
   if (!filtered.length) {
-    tbody.innerHTML = `<tr><td colspan="11"><div class="empty-state"><div class="empty-state-icon">👥</div><h3>No stakeholders yet</h3><p>Add your first stakeholder using the form above</p></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${colSpan}"><div class="empty-state"><div class="empty-state-icon">👥</div><h3>No stakeholders yet</h3><p>Add your first stakeholder using the form above</p></div></td></tr>`;
+    updateSuperReadOnlyFormState();
     return;
   }
 
@@ -2749,8 +2950,15 @@ function renderRegister() {
     const stepsBadges = steps.length
       ? steps.sort((a,b)=>+a-+b).map(n=>`<span style="background:var(--ucb-blue-25);color:#001489;padding:2px 7px;border-radius:2px;font-size:11px;font-weight:700;margin:1px;display:inline-block;">${n}</span>`).join('')
       : '<span style="color:var(--slate-light);font-size:12px;">—</span>';
+    const ownerTd = currentUserIsSuper
+      ? `<td style="font-size:11px;color:var(--slate-light);max-width:140px;overflow:hidden;text-overflow:ellipsis" title="${String(s.ownerUserId || '')}">${ownerEmailLabel(s.ownerUserId)}</td>`
+      : '';
+    const actionCell = canEditRow
+      ? `<button class="btn btn-outline btn-sm" onclick="editStakeholder('${s._atId}')" title="Edit">✏</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteStakeholder('${s._atId}')" title="Delete">✕</button>`
+      : '<span style="font-size:11px;color:var(--slate-light)">—</span>';
     return `<tr>
-      <td>${s.org||'—'}</td><td><strong>${s.name||'—'}</strong></td>
+      <td>${s.org||'—'}</td>${ownerTd}<td><strong>${s.name||'—'}</strong></td>
       <td style="font-size:12px">${s.title||'—'}</td>
       <td style="font-size:12px">${s.role}</td>
       <td>${indicationBadge(s.indication)}</td>
@@ -2758,11 +2966,9 @@ function renderRegister() {
       <td>${advocacyBadge(s.advocacy)}</td>
       <td style="white-space:nowrap">${stepsBadges}</td>
       <td style="font-size:12px;max-width:180px">${s.interests||'—'}</td>
-      <td><div style="display:flex;gap:6px;">
-        <button class="btn btn-outline btn-sm" onclick="editStakeholder('${s._atId}')" title="Edit">✏</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteStakeholder('${s._atId}')" title="Delete">✕</button>
-      </div></td></tr>`;
+      <td><div style="display:flex;gap:6px;">${actionCell}</div></td></tr>`;
   }).join('');
+  updateSuperReadOnlyFormState();
 }
 
 // ─── PATHWAY MAP ─────────────────────────────────────────────────────────────
@@ -3483,6 +3689,10 @@ function resetFlowRoleInputs(type) {
 }
 
 function openEditModal(stepNum) {
+  if (isSuperReadOnlyView()) {
+    toast('Read-only: switch Workspace to edit pathway roles.');
+    return;
+  }
   const s     = PATHWAY_STEPS.find(p => p.step === stepNum);
   const trust = getActiveTrust();
   const roles = getRolesForStep(stepNum);
@@ -4170,6 +4380,7 @@ async function submitSignIn() {
       document.getElementById('auth-in-pass').value = '';
       applyAuthVisibility();
       try {
+        await refreshSuperAdminState();
         await loadAllData(true);
       } catch (err) {
         console.warn(err);
@@ -4256,6 +4467,7 @@ async function submitRegister() {
       document.getElementById('auth-reg-pass2').value = '';
       applyAuthVisibility();
       try {
+        await refreshSuperAdminState();
         await loadAllData(true);
       } catch (err) {
         console.warn(err);
@@ -4332,6 +4544,16 @@ function signOut() {
   trustRoles = {};
   painGains = [];
   flowRoles = {};
+  currentUserIsSuper = false;
+  selectedDataOwnerUserId = null;
+  dataOwnerDirectory = [];
+  const wrap = document.getElementById('super-owner-wrap');
+  if (wrap) wrap.style.display = 'none';
+  const sel = document.getElementById('super-owner-select');
+  if (sel) {
+    sel.innerHTML = '<option value="">All users</option>';
+    sel.value = '';
+  }
   Object.entries(DEFAULT_FLOW_ROLES).forEach(([k, v]) => {
     flowRoles[+k] = { _atId: null, leads: [...v.leads], supports: [...v.supports] };
   });
@@ -4375,7 +4597,14 @@ function enterApp(area) {
   const navBtns = document.querySelectorAll('nav button');
   navBtns[0].classList.add('active');
   renderFlow();
-  void loadAllData(true);
+  void (async () => {
+    try {
+      await refreshSuperAdminState();
+      await loadAllData(true);
+    } catch (e) {
+      console.warn(e);
+    }
+  })();
 }
 
 function goHome() {
@@ -4395,6 +4624,7 @@ function goHome() {
   applyAuthVisibility();
   // Load data silently in background — don't show overlay so landing page stays clickable
   try {
+    await refreshSuperAdminState();
     await loadAllData(true); // silent = true
   } catch(e) {
     console.error('Background load failed:', e);

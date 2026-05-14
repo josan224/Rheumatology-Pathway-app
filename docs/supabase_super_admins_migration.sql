@@ -1,9 +1,8 @@
--- Pathway Tool: per-user data tables + RLS + optional super-admins
--- Run once in Supabase → SQL Editor (as project owner).
+-- Add super-admin support to an EXISTING Pathway Tool database
+-- (You already ran docs/supabase_schema.sql without super-admins.)
+-- Run the whole script once in Supabase → SQL Editor.
 
--- ─── Super-admins (who can read/update/delete all rows) ──────────────────────
--- Add a user id with: insert into public.super_admins (user_id) values ('<uuid-from-auth-users>');
--- Remove with: delete from public.super_admins where user_id = '<uuid>';
+-- ─── Super-admins + helpers ─────────────────────────────────────────────────
 
 create table if not exists public.super_admins (
   user_id uuid primary key references auth.users (id) on delete cascade,
@@ -15,8 +14,6 @@ alter table public.super_admins enable row level security;
 drop policy if exists "super_admins_select_self" on public.super_admins;
 create policy "super_admins_select_self" on public.super_admins
   for select to authenticated using (auth.uid() = user_id);
-
--- No insert/update/delete for authenticated — promote users only via SQL Editor or service role.
 
 create or replace function public.is_super_admin()
 returns boolean
@@ -32,7 +29,6 @@ $$;
 
 grant execute on function public.is_super_admin() to authenticated;
 
--- Directory of users who have data (super-admins only; empty for others)
 create or replace function public.list_data_owner_directory()
 returns table (user_id uuid, email text)
 language plpgsql
@@ -59,31 +55,11 @@ $$;
 
 grant execute on function public.list_data_owner_directory() to authenticated;
 
--- ─── stakeholders ───────────────────────────────────────────────────────────
+grant select on public.super_admins to authenticated;
 
-create table if not exists public.stakeholders (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
-  org text not null default '',
-  name text not null default '',
-  title text not null default '',
-  role text not null default '',
-  indication text not null default '',
-  impact text not null default '',
-  influence text not null default '',
-  advocacy text not null default '',
-  steps int[] not null default '{}',
-  interests text not null default '',
-  strategy text not null default '',
-  notes text not null default '',
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
+-- ─── Replace RLS on data tables ─────────────────────────────────────────────
 
-create index if not exists stakeholders_user_id_idx on public.stakeholders (user_id);
-
-alter table public.stakeholders enable row level security;
-
+-- stakeholders
 drop policy if exists "stakeholders_select_own" on public.stakeholders;
 drop policy if exists "stakeholders_insert_own" on public.stakeholders;
 drop policy if exists "stakeholders_update_own" on public.stakeholders;
@@ -96,37 +72,17 @@ drop policy if exists "stakeholders_delete" on public.stakeholders;
 create policy "stakeholders_select" on public.stakeholders
   for select to authenticated
   using (auth.uid() = user_id or public.is_super_admin());
-
 create policy "stakeholders_insert" on public.stakeholders
-  for insert to authenticated
-  with check (auth.uid() = user_id or public.is_super_admin());
-
+  for insert to authenticated with check (auth.uid() = user_id or public.is_super_admin());
 create policy "stakeholders_update" on public.stakeholders
   for update to authenticated
   using (auth.uid() = user_id or public.is_super_admin())
   with check (auth.uid() = user_id or public.is_super_admin());
-
 create policy "stakeholders_delete" on public.stakeholders
   for delete to authenticated
   using (auth.uid() = user_id or public.is_super_admin());
 
--- ─── pathway_roles ──────────────────────────────────────────────────────────
-
-create table if not exists public.pathway_roles (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
-  step_number int not null,
-  trust text not null default '',
-  leads text not null default '',
-  supports text not null default '',
-  created_at timestamptz not null default now(),
-  constraint pathway_roles_user_step_trust unique (user_id, step_number, trust)
-);
-
-create index if not exists pathway_roles_user_id_idx on public.pathway_roles (user_id);
-
-alter table public.pathway_roles enable row level security;
-
+-- pathway_roles
 drop policy if exists "pathway_roles_select_own" on public.pathway_roles;
 drop policy if exists "pathway_roles_insert_own" on public.pathway_roles;
 drop policy if exists "pathway_roles_update_own" on public.pathway_roles;
@@ -139,35 +95,17 @@ drop policy if exists "pathway_roles_delete" on public.pathway_roles;
 create policy "pathway_roles_select" on public.pathway_roles
   for select to authenticated
   using (auth.uid() = user_id or public.is_super_admin());
-
 create policy "pathway_roles_insert" on public.pathway_roles
-  for insert to authenticated
-  with check (auth.uid() = user_id or public.is_super_admin());
-
+  for insert to authenticated with check (auth.uid() = user_id or public.is_super_admin());
 create policy "pathway_roles_update" on public.pathway_roles
   for update to authenticated
   using (auth.uid() = user_id or public.is_super_admin())
   with check (auth.uid() = user_id or public.is_super_admin());
-
 create policy "pathway_roles_delete" on public.pathway_roles
   for delete to authenticated
   using (auth.uid() = user_id or public.is_super_admin());
 
--- ─── pains_gains ───────────────────────────────────────────────────────────
-
-create table if not exists public.pains_gains (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
-  trust text not null default '',
-  pain text not null default '',
-  gain text not null default '',
-  created_at timestamptz not null default now()
-);
-
-create index if not exists pains_gains_user_id_idx on public.pains_gains (user_id);
-
-alter table public.pains_gains enable row level security;
-
+-- pains_gains
 drop policy if exists "pains_gains_select_own" on public.pains_gains;
 drop policy if exists "pains_gains_insert_own" on public.pains_gains;
 drop policy if exists "pains_gains_update_own" on public.pains_gains;
@@ -180,25 +118,12 @@ drop policy if exists "pains_gains_delete" on public.pains_gains;
 create policy "pains_gains_select" on public.pains_gains
   for select to authenticated
   using (auth.uid() = user_id or public.is_super_admin());
-
 create policy "pains_gains_insert" on public.pains_gains
-  for insert to authenticated
-  with check (auth.uid() = user_id or public.is_super_admin());
-
+  for insert to authenticated with check (auth.uid() = user_id or public.is_super_admin());
 create policy "pains_gains_update" on public.pains_gains
   for update to authenticated
   using (auth.uid() = user_id or public.is_super_admin())
   with check (auth.uid() = user_id or public.is_super_admin());
-
 create policy "pains_gains_delete" on public.pains_gains
   for delete to authenticated
   using (auth.uid() = user_id or public.is_super_admin());
-
--- ─── API access ──────────────────────────────────────────────────────────────
-
-grant usage on schema public to authenticated;
-
-grant select, insert, update, delete on public.stakeholders to authenticated;
-grant select, insert, update, delete on public.pathway_roles to authenticated;
-grant select, insert, update, delete on public.pains_gains to authenticated;
-grant select on public.super_admins to authenticated;
