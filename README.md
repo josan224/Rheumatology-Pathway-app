@@ -17,43 +17,20 @@ The tool is split into six tabs:
 
 ---
 
-## How data is stored — Airtable
+## How data is stored — Supabase
 
-All data entered into the tool is saved to and loaded from **Airtable**, an online database. You do not need to access Airtable directly to use the tool — everything is managed through the tool interface itself. However, it is useful to know how it is structured.
+After you sign in with **email and password**, stakeholder data, pathway role overrides, and pains & gains entries are saved to **your Supabase project** (PostgreSQL). Each user only sees and edits **their own rows** (enforced with **Row Level Security**).
 
-### Tables
+Setup for new environments:
 
-There are three tables in the Airtable base:
-
-| Table | What it stores |
-|---|---|
-| `Stakeholders` | All registered stakeholders and their details |
-| `PathwayRoles` | The lead and supporting roles assigned to each of the 13 pathway steps |
-| `PainsGains` | The saved pains and gains entries, grouped by clinical role |
-
-### Fields — Stakeholders table
-
-| Field name | What it is |
-|---|---|
-| Organisation | The NHS Trust or Health Board |
-| Name | The stakeholder's name |
-| Title | Their title or seniority (e.g. Specialist, Lead) |
-| Role | Consultant, GP, Nurse, Pharmacist, or Other |
-| Indication | RA, PsA, Plaque Psoriasis, or Multiple / All |
-| Impact | High, Medium or Low |
-| Influence | High, Medium or Low |
-| Advocacy | Their current advocacy level (Unaware through to Advocacy) |
-| Steps | Which of the 13 pathway steps they are involved in |
-| Key Interests | Their areas of clinical interest |
-| Engagement Strategy | How you plan to engage them |
-| Notes | Any additional context |
+1. Follow **[docs/USER_AUTH_BACKEND.md](docs/USER_AUTH_BACKEND.md)** for Auth and API keys (`SB_URL`, `SB_ANON_KEY` in `index.html`).
+2. Run **[docs/supabase_schema.sql](docs/supabase_schema.sql)** once in the Supabase SQL Editor to create the `stakeholders`, `pathway_roles`, and `pains_gains` tables.
 
 ### If something stops saving or loading
 
-If the tool stops saving data or shows an error message, it is most likely one of two things:
-
-1. **The Airtable API token has expired.** The token is a long string of characters near the top of the `index.html` file, on the line that begins `const AT_TOKEN =`. If this needs updating, speak to Joe.
-2. **The Airtable base has been moved or renamed.** The base ID is on the line directly below, beginning `const AT_BASE =`. Again, speak to Joe if this needs changing.
+- Confirm **SB_URL** and **SB_ANON_KEY** are set in `index.html` and match your Supabase project.
+- Confirm the SQL schema has been applied and you are **signed in** (the API uses your session token).
+- Open the browser **developer console** on the failing page for error details.
 
 ---
 
@@ -105,7 +82,7 @@ The tool is a single HTML file (`index.html`) hosted via **Netlify**, which is c
 4. Scroll to the bottom and click **Commit changes**
 5. The site will update automatically shortly after
 
-> ⚠️ If you need to do anything beyond editing content — such as changing how the site is deployed, connecting a new Airtable base, updating API credentials, or making structural changes to the code — **please speak to Joe** rather than attempting it directly.
+> ⚠️ If you need to do anything beyond editing content — such as changing how the site is deployed, connecting a new Supabase project, updating API credentials, or making structural changes to the code — **please speak to Joe** rather than attempting it directly.
 
 ---
 
