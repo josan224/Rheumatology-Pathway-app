@@ -1945,23 +1945,179 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-// ─── AIRTABLE CONFIG ─────────────────────────────────────────────────────────
+// ─── SUPABASE DATA + HELPERS (per-user Postgres via PostgREST) ───────────────
+// Run docs/supabase_schema.sql in the Supabase SQL editor once. Auth keys: SB_URL / SB_ANON_KEY below.
 
-const AT_TOKEN = 'pato9DmsJ3I1EkLYH.0ee7268ad995d9965b1b32b87f9c634bf284f92edfd8e029ab287e703be6ad06';
-const AT_BASE  = 'app1ENiTGrD7MARmH';
-const AT_URL   = `https://api.airtable.com/v0/${AT_BASE}`;
-const AT_HEADS = { 'Authorization': `Bearer ${AT_TOKEN}`, 'Content-Type': 'application/json' };
-
-/** Optional hosted auth — set both for sign-in across devices (Supabase). See docs/USER_AUTH_BACKEND.md */
 const SB_URL = 'https://lxckzliwhcpdugacrnqd.supabase.co';
 const SB_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4Y2t6bGl3aGNwZHVnYWNybnFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MDI1OTAsImV4cCI6MjA5NDA3ODU5MH0.F_AXGg9VR6TbNLT-u7JN6lWiEdw_ryoUO-wdxrb4A0Y';
 
-// In-memory cache — everything the app needs
 let stakeholders = [];   // { id, _atId, org, name, role, indication, impact, influence, advocacy, steps, interests, strategy, notes }
-let selectedStepFilters = new Set(); // step numbers active in register filter
-let trustRoles = {};          // { [trust]: { [stepNum]: { _atId, leads, supports } } }
-let painGains    = [];   // { id, _atId, stakeholderId, stakeholderName, stakeholderOrg, pain, gain }
-let flowRoles    = {};   // { [stepNum]: { _atId, leads:[], supports:[] } }
+let selectedStepFilters = new Set();
+let trustRoles = {};
+let painGains = [];
+let flowRoles = {};
+
+const AUTH_SESSION_KEY = 'ucb_auth_session_v1';
+const AUTH_ACCOUNTS_KEY = 'ucb_local_accounts_v1';
+
+function getSbAccessToken() {
+  try {
+    const raw = sessionStorage.getItem(AUTH_SESSION_KEY);
+    if (!raw) return null;
+    const o = JSON.parse(raw);
+    if (o.kind !== 'sb' || !o.access_token) return null;
+    if (typeof o.exp === 'number' && Date.now() > o.exp) return null;
+    return o.access_token;
+  } catch {
+    return null;
+  }
+}
+
+async function sbRest(path, init = {}) {
+  const doFetch = async () => {
+    const token = getSbAccessToken();
+    if (!token) throw new Error('Not signed in.');
+    const headers = {
+      apikey: SB_ANON_KEY.trim(),
+      Authorization: `Bearer ${token}`,
+      ...(init.headers || {})
+    };
+    if (init.body !== undefined && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
+    return fetch(`${sbApiBase()}/rest/v1/${path}`, {
+      method: init.method || 'GET',
+      headers,
+      body:
+        init.body === undefined || (init.method || 'GET') === 'GET'
+          ? undefined
+          : typeof init.body === 'string'
+            ? init.body
+            : JSON.stringify(init.body)
+    });
+  };
+  let res = await doFetch();
+  if (res.status === 401 && typeof supabaseRefreshTokens === 'function') {
+    const refreshed = await supabaseRefreshTokens();
+    if (refreshed) res = await doFetch();
+  }
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`${res.status}: ${t}`);
+  }
+  if (res.status === 204) return null;
+  const txt = await res.text();
+  if (!txt) return null;
+  return JSON.parse(txt);
+}
+
+function stakeholderFromRow(row) {
+  const steps = Array.isArray(row.steps) ? row.steps : [];
+  return {
+    _atId: row.id,
+    id: row.id,
+    org: row.org || '',
+    name: row.name || '',
+    title: row.title || '',
+    role: row.role || '',
+    indication: row.indication || '',
+    impact: row.impact || '',
+    influence: row.influence || '',
+    advocacy: row.advocacy || '',
+    steps,
+    step: steps[0] || '',
+    interests: row.interests || '',
+    strategy: row.strategy || '',
+    notes: row.notes || ''
+  };
+}
+
+// ─── LOAD ALL DATA FROM SUPABASE ─────────────────────────────────────────────
+
+async function loadAllData(silent = false) {
+  if (!useSupabaseAuth()) {
+    stakeholders = [];
+    trustRoles = {};
+    flowRoles = {};
+    painGains = [];
+    Object.entries(DEFAULT_FLOW_ROLES).forEach(([k, v]) => {
+      flowRoles[+k] = { _atId: null, leads: [...v.leads], supports: [...v.supports] };
+    });
+    if (!silent) toast('Configure Supabase (SB_URL / SB_ANON_KEY) to load data.');
+    return;
+  }
+  if (!getSbAccessToken()) {
+    stakeholders = [];
+    trustRoles = {};
+    painGains = [];
+    Object.entries(DEFAULT_FLOW_ROLES).forEach(([k, v]) => {
+      flowRoles[+k] = { _atId: null, leads: [...v.leads], supports: [...v.supports] };
+    });
+    return;
+  }
+
+  if (!silent) setLoading(true, 'Loading your data…');
+  try {
+    const sRows = (await sbRest('stakeholders?select=*&order=created_at.asc')) || [];
+    stakeholders = (Array.isArray(sRows) ? sRows : []).map(stakeholderFromRow);
+
+    const rRows = (await sbRest('pathway_roles?select=*&order=step_number.asc')) || [];
+    flowRoles = {};
+    trustRoles = {};
+    (Array.isArray(rRows) ? rRows : []).forEach(row => {
+      const num = row.step_number;
+      if (!num) return;
+      const entry = {
+        _atId: row.id,
+        leads: row.leads ? row.leads.split('|').filter(Boolean) : [],
+        supports: row.supports ? row.supports.split('|').filter(Boolean) : []
+      };
+      const trust = row.trust || '';
+      if (trust) {
+        if (!trustRoles[trust]) trustRoles[trust] = {};
+        trustRoles[trust][num] = entry;
+      } else {
+        flowRoles[num] = entry;
+      }
+    });
+    Object.entries(DEFAULT_FLOW_ROLES).forEach(([k, v]) => {
+      if (!flowRoles[+k]) flowRoles[+k] = { _atId: null, leads: [...v.leads], supports: [...v.supports] };
+    });
+
+    const pgRows = (await sbRest('pains_gains?select=*&order=created_at.asc')) || [];
+    painGains = (Array.isArray(pgRows) ? pgRows : []).map(r => {
+      const rawPain = r.pain || '';
+      const rawGain = r.gain || '';
+      const roleMatch = rawPain.match(/^\[([^\]]+)\]/) || rawGain.match(/^\[([^\]]+)\]/);
+      const roleLabel = roleMatch ? roleMatch[1] : '';
+      const roleMap = {
+        'Consultant (Rheumatologist)': 'Consultant',
+        'Nurse (Specialist Rheumatology Nurse)': 'Nurse',
+        'Pharmacist (Secondary Care / HCD)': 'Pharmacist',
+        'GP (Primary Care Physician)': 'GP',
+        Radiologist: 'Radiologist'
+      };
+      const shortKeys = ['Consultant', 'Nurse', 'Pharmacist', 'GP', 'Radiologist'];
+      let roleKey = roleMap[roleLabel] || '';
+      if (!roleKey && shortKeys.includes(roleLabel)) roleKey = roleLabel;
+      const trustVal = r.trust || '';
+      return {
+        _atId: r.id,
+        id: r.id,
+        stakeholderId: roleKey || roleLabel || 'Other',
+        stakeholderName: roleLabel || roleKey,
+        stakeholderOrg: trustVal,
+        trust: trustVal,
+        pain: rawPain,
+        gain: rawGain
+      };
+    });
+
+    if (!silent) setLoading(false);
+  } catch (e) {
+    if (!silent) setLoading(false);
+    toast('⚠ Could not load data: ' + e.message);
+    console.error(e);
+  }
+}
 
 // ─── PATHWAY STEPS DATA ──────────────────────────────────────────────────────
 
@@ -2000,140 +2156,6 @@ function setLoading(on, msg = 'Saving…') {
   }
   el.querySelector('#at-loading-msg').textContent = msg;
   el.style.display = on ? 'flex' : 'none';
-}
-
-// ─── AIRTABLE HELPERS ────────────────────────────────────────────────────────
-
-async function atFetchAll(table) {
-  let records = [], offset = null;
-  do {
-    const url = `${AT_URL}/${encodeURIComponent(table)}` + (offset ? `?offset=${offset}` : '');
-    const res = await fetch(url, { headers: AT_HEADS });
-    if (!res.ok) throw new Error(`Airtable error ${res.status}: ${await res.text()}`);
-    const data = await res.json();
-    records = records.concat(data.records || []);
-    offset = data.offset || null;
-  } while (offset);
-  return records;
-}
-
-async function atCreate(table, fields) {
-  const res = await fetch(`${AT_URL}/${encodeURIComponent(table)}`, {
-    method: 'POST', headers: AT_HEADS,
-    body: JSON.stringify({ fields })
-  });
-  if (!res.ok) throw new Error(`Airtable create error ${res.status}: ${await res.text()}`);
-  return await res.json();
-}
-
-async function atUpdate(table, recordId, fields) {
-  const res = await fetch(`${AT_URL}/${encodeURIComponent(table)}/${recordId}`, {
-    method: 'PATCH', headers: AT_HEADS,
-    body: JSON.stringify({ fields })
-  });
-  if (!res.ok) throw new Error(`Airtable update error ${res.status}: ${await res.text()}`);
-  return await res.json();
-}
-
-async function atDelete(table, recordId) {
-  const res = await fetch(`${AT_URL}/${encodeURIComponent(table)}/${recordId}`, {
-    method: 'DELETE', headers: AT_HEADS
-  });
-  if (!res.ok) throw new Error(`Airtable delete error ${res.status}: ${await res.text()}`);
-  return await res.json();
-}
-
-// ─── LOAD ALL DATA FROM AIRTABLE ─────────────────────────────────────────────
-
-async function loadAllData(silent = false) {
-  if (!silent) setLoading(true, 'Loading data from Airtable…');
-  try {
-    // Load stakeholders
-    const sRecs = await atFetchAll('Stakeholders');
-    stakeholders = sRecs.map(r => ({
-      _atId: r.id,
-      id: r.id,                                       // use Airtable record ID as the app ID
-      org:        r.fields['Organisation'] || '',
-      name:       r.fields['Name'] || '',
-      title:      r.fields['Title'] || '',
-      role:       r.fields['Role'] || '',
-      indication: r.fields['Indication'] || '',
-      impact:     r.fields['Impact'] || '',
-      influence:  r.fields['Influence'] || '',
-      advocacy:   r.fields['Advocacy'] || '',
-      steps:      r.fields['Steps'] || [],
-      step:       (r.fields['Steps'] || [])[0] || '',
-      interests:  r.fields['Key Interests'] || '',
-      strategy:   r.fields['Engagement Strategy'] || '',
-      notes:      r.fields['Notes'] || ''
-    }));
-
-    // Load pathway roles (default + trust-specific)
-    const rRecs = await atFetchAll('PathwayRoles');
-    flowRoles = {};
-    trustRoles = {};
-    rRecs.forEach(r => {
-      const num   = r.fields['StepNumber'];
-      const trust = r.fields['Trust'] || '';
-      if (!num) return;
-      const entry = {
-        _atId:    r.id,
-        leads:    r.fields['Leads']    ? r.fields['Leads'].split('|').filter(Boolean)    : [],
-        supports: r.fields['Supports'] ? r.fields['Supports'].split('|').filter(Boolean) : []
-      };
-      if (trust) {
-        // Trust-specific override
-        if (!trustRoles[trust]) trustRoles[trust] = {};
-        trustRoles[trust][num] = entry;
-      } else {
-        // Default (no trust)
-        flowRoles[num] = entry;
-      }
-    });
-    // Fill defaults for any steps not yet in Airtable
-    Object.entries(DEFAULT_FLOW_ROLES).forEach(([k, v]) => {
-      if (!flowRoles[+k]) flowRoles[+k] = { _atId: null, leads: [...v.leads], supports: [...v.supports] };
-    });
-
-    // Load pains & gains
-    const pgRecs = await atFetchAll('PainsGains');
-    painGains = pgRecs.map(r => {
-      const rawPain = r.fields['Pain'] || '';
-      const rawGain = r.fields['Gain'] || '';
-      // Extract role label from [Role Label] prefix
-      const roleMatch = rawPain.match(/^\[([^\]]+)\]/) || rawGain.match(/^\[([^\]]+)\]/);
-      const roleLabel = roleMatch ? roleMatch[1] : '';
-      const roleMap = {
-        'Consultant (Rheumatologist)':           'Consultant',
-        'Nurse (Specialist Rheumatology Nurse)': 'Nurse',
-        'Pharmacist (Secondary Care / HCD)':     'Pharmacist',
-        'GP (Primary Care Physician)':           'GP',
-        'Radiologist':                           'Radiologist'
-      };
-      // Also accept short keys directly (backwards compat)
-      const shortKeys = ['Consultant','Nurse','Pharmacist','GP','Radiologist'];
-      let roleKey = roleMap[roleLabel] || '';
-      if (!roleKey && shortKeys.includes(roleLabel)) roleKey = roleLabel;
-      // Last resort: check StakeholderName field if it was saved
-      if (!roleKey) roleKey = r.fields['StakeholderName'] || 'Other';
-      const trustVal = r.fields['Trust'] || '';
-      return {
-        _atId: r.id, id: r.id,
-        stakeholderId:   roleKey,
-        stakeholderName: roleLabel || roleKey,
-        stakeholderOrg:  trustVal,
-        trust:           trustVal,
-        pain: rawPain,
-        gain: rawGain
-      };
-    });
-
-    if (!silent) setLoading(false);
-  } catch (e) {
-    if (!silent) setLoading(false);
-    toast('⚠ Could not load from Airtable: ' + e.message);
-    console.error(e);
-  }
 }
 
 // ─── DATA LAYER — STAKEHOLDERS ───────────────────────────────────────────────
@@ -2192,31 +2214,41 @@ async function saveStakeholder() {
   const editId = document.getElementById('f-edit-id').value;
   const steps  = getSelectedSteps();
 
-  const fields = {
-    'Organisation':        org,
-    'Title':               document.getElementById('f-title').value.trim(),
-    'Name':                document.getElementById('f-name').value.trim(),
-    'Role':                getRoleValue(),
-    'Indication':          document.getElementById('f-indication').value,
-    'Impact':              document.getElementById('f-impact').value,
-    'Influence':           document.getElementById('f-influence').value,
-    'Advocacy':            document.getElementById('f-advocacy').value,
-    'Steps':               steps,
-    'Key Interests':       document.getElementById('f-interests').value.trim(),
-    'Engagement Strategy': document.getElementById('f-strategy').value.trim(),
-    'Notes':               document.getElementById('f-notes').value.trim()
+  const row = {
+    org,
+    title: document.getElementById('f-title').value.trim(),
+    name: document.getElementById('f-name').value.trim(),
+    role: getRoleValue(),
+    indication: document.getElementById('f-indication').value,
+    impact: document.getElementById('f-impact').value,
+    influence: document.getElementById('f-influence').value,
+    advocacy: document.getElementById('f-advocacy').value,
+    steps,
+    interests: document.getElementById('f-interests').value.trim(),
+    strategy: document.getElementById('f-strategy').value.trim(),
+    notes: document.getElementById('f-notes').value.trim()
   };
 
   setLoading(true, editId ? 'Updating stakeholder…' : 'Adding stakeholder…');
   try {
     if (editId) {
-      const rec = await atUpdate('Stakeholders', editId, fields);
+      const rows = await sbRest(`stakeholders?id=eq.${encodeURIComponent(editId)}`, {
+        method: 'PATCH',
+        headers: { Prefer: 'return=representation' },
+        body: row
+      });
+      const rec = Array.isArray(rows) ? rows[0] : rows;
       const idx = stakeholders.findIndex(s => s._atId === editId);
-      if (idx > -1) stakeholders[idx] = { ...stakeholders[idx], ...atStakeholderFromRec(rec) };
+      if (idx > -1 && rec) stakeholders[idx] = { ...stakeholders[idx], ...stakeholderFromRow(rec) };
       toast('Stakeholder updated ✓');
     } else {
-      const rec = await atCreate('Stakeholders', fields);
-      stakeholders.push(atStakeholderFromRec(rec));
+      const rows = await sbRest('stakeholders', {
+        method: 'POST',
+        headers: { Prefer: 'return=representation' },
+        body: row
+      });
+      const rec = Array.isArray(rows) ? rows[0] : rows;
+      if (rec) stakeholders.push(stakeholderFromRow(rec));
       toast('Stakeholder added ✓');
     }
     clearRegForm();
@@ -2228,34 +2260,17 @@ async function saveStakeholder() {
   setLoading(false);
 }
 
-function atStakeholderFromRec(r) {
-  return {
-    _atId: r.id, id: r.id,
-    org:        r.fields['Organisation'] || '',
-    name:       r.fields['Name'] || '',
-    title:      r.fields['Title'] || '',
-    role:       r.fields['Role'] || '',
-    indication: r.fields['Indication'] || '',
-    impact:     r.fields['Impact'] || '',
-    influence:  r.fields['Influence'] || '',
-    advocacy:   r.fields['Advocacy'] || '',
-    steps:      r.fields['Steps'] || [],
-    step:       (r.fields['Steps'] || [])[0] || '',
-    interests:  r.fields['Key Interests'] || '',
-    strategy:   r.fields['Engagement Strategy'] || '',
-    notes:      r.fields['Notes'] || ''
-  };
-}
-
 async function deleteStakeholder(id) {
   if (!confirm('Delete this stakeholder?')) return;
   setLoading(true, 'Deleting…');
   try {
-    await atDelete('Stakeholders', id);
+    await sbRest(`stakeholders?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE' });
     stakeholders = stakeholders.filter(s => s._atId !== id);
     // also remove their pain/gain records
     const pgToDelete = painGains.filter(p => p.stakeholderId === id);
-    for (const pg of pgToDelete) { await atDelete('PainsGains', pg._atId); }
+    for (const pg of pgToDelete) {
+      if (pg._atId) await sbRest(`pains_gains?id=eq.${encodeURIComponent(pg._atId)}`, { method: 'DELETE' });
+    }
     painGains = painGains.filter(p => p.stakeholderId !== id);
     renderRegister();
     updatePGDropdown();
@@ -2265,11 +2280,15 @@ async function deleteStakeholder(id) {
 }
 
 async function clearAll() {
-  if (!confirm('Delete ALL stakeholders and pain/gain entries from Airtable? This cannot be undone.')) return;
+  if (!confirm('Delete ALL stakeholders and pain/gain entries? This cannot be undone.')) return;
   setLoading(true, 'Clearing all data…');
   try {
-    for (const s of [...stakeholders]) { await atDelete('Stakeholders', s._atId); }
-    for (const p of [...painGains])    { await atDelete('PainsGains', p._atId); }
+    for (const s of [...stakeholders]) {
+      await sbRest(`stakeholders?id=eq.${encodeURIComponent(s._atId)}`, { method: 'DELETE' });
+    }
+    for (const p of [...painGains]) {
+      if (p._atId) await sbRest(`pains_gains?id=eq.${encodeURIComponent(p._atId)}`, { method: 'DELETE' });
+    }
     stakeholders = []; painGains = [];
     renderRegister(); updatePGDropdown();
     toast('All data cleared');
@@ -2291,18 +2310,26 @@ async function saveFlowRoles() {
 
   setLoading(true, 'Saving pathway roles…');
   try {
-    const fields = {
-      'StepNumber': step,
-      'StepName':   PATHWAY_STEPS.find(p => p.step === step)?.core || '',
-      'Leads':      newRoles.leads.join('|'),
-      'Supports':   newRoles.supports.join('|'),
-      ...(trust ? { 'Trust': trust } : {})
+    const body = {
+      step_number: step,
+      trust: trust || '',
+      leads: newRoles.leads.join('|'),
+      supports: newRoles.supports.join('|')
     };
     if (existing._atId) {
-      await atUpdate('PathwayRoles', existing._atId, fields);
+      await sbRest(`pathway_roles?id=eq.${encodeURIComponent(existing._atId)}`, {
+        method: 'PATCH',
+        headers: { Prefer: 'return=representation' },
+        body: { leads: body.leads, supports: body.supports }
+      });
     } else {
-      const rec = await atCreate('PathwayRoles', fields);
-      existing._atId = rec.id;
+      const rows = await sbRest('pathway_roles', {
+        method: 'POST',
+        headers: { Prefer: 'return=representation' },
+        body
+      });
+      const rec = Array.isArray(rows) ? rows[0] : rows;
+      if (rec && rec.id) existing._atId = rec.id;
     }
     // Store in correct bucket
     if (trust) {
@@ -2320,24 +2347,30 @@ async function saveFlowRoles() {
 }
 
 async function resetFlowRoles() {
-  if (!confirm('Reset all pathway roles to defaults? This will overwrite Airtable data.')) return;
+  if (!confirm('Reset all pathway roles to defaults? This will replace your saved pathway roles. Continue?')) return;
   setLoading(true, 'Resetting roles…');
   try {
-    // Delete existing PathwayRoles records
-    const existing = Object.values(flowRoles).filter(r => r._atId);
-    for (const r of existing) { await atDelete('PathwayRoles', r._atId); }
+    await sbRest('pathway_roles', { method: 'DELETE' });
     flowRoles = {};
-    // Recreate from defaults
+    trustRoles = {};
     for (const [k, v] of Object.entries(DEFAULT_FLOW_ROLES)) {
-      const step = +k;
-      const fields = {
-        'StepNumber': step,
-        'StepName':   PATHWAY_STEPS.find(p => p.step === step)?.core || '',
-        'Leads':      v.leads.join('|'),
-        'Supports':   v.supports.join('|')
+      const stepNum = +k;
+      const rows = await sbRest('pathway_roles', {
+        method: 'POST',
+        headers: { Prefer: 'return=representation' },
+        body: {
+          step_number: stepNum,
+          trust: '',
+          leads: v.leads.join('|'),
+          supports: v.supports.join('|')
+        }
+      });
+      const rec = Array.isArray(rows) ? rows[0] : rows;
+      flowRoles[stepNum] = {
+        _atId: rec && rec.id ? rec.id : null,
+        leads: [...v.leads],
+        supports: [...v.supports]
       };
-      const rec = await atCreate('PathwayRoles', fields);
-      flowRoles[step] = { _atId: rec.id, leads: [...v.leads], supports: [...v.supports] };
     }
     if (document.getElementById('page-flow').classList.contains('active')) renderFlow();
     if (document.getElementById('page-pathway').classList.contains('active')) renderPathway();
@@ -2362,16 +2395,31 @@ async function addPainGain() {
 
   setLoading(true, 'Saving entry…');
   try {
-    const fields = {
-      'Pain': pain ? `[${roleLabel}] ${pain}` : '',
-      'Gain': gain ? `[${roleLabel}] ${gain}` : ''
+    const painVal = pain ? `[${roleLabel}] ${pain}` : '';
+    const gainVal = gain ? `[${roleLabel}] ${gain}` : '';
+    const body = {
+      trust: trust || '',
+      pain: painVal,
+      gain: gainVal
     };
-    if (trust) fields['Trust'] = trust;
-    const rec = await atCreate('PainsGains', fields);
-    painGains.push({ _atId: rec.id, id: rec.id,
-      stakeholderId: role, stakeholderName: roleLabel,
-      stakeholderOrg: trust, trust,
-      pain: fields['Pain'], gain: fields['Gain'] });
+    const rows = await sbRest('pains_gains', {
+      method: 'POST',
+      headers: { Prefer: 'return=representation' },
+      body
+    });
+    const rec = Array.isArray(rows) ? rows[0] : rows;
+    if (rec) {
+      painGains.push({
+        _atId: rec.id,
+        id: rec.id,
+        stakeholderId: role,
+        stakeholderName: roleLabel,
+        stakeholderOrg: trust,
+        trust,
+        pain: painVal,
+        gain: gainVal
+      });
+    }
     document.getElementById('pg-pain').value = '';
     document.getElementById('pg-gain').value = '';
     document.getElementById('pg-role-template').value = '';
@@ -2398,7 +2446,7 @@ async function deletePG(roleKey, trustKey = '') {
   if (!toDelete.length) {
     // Fallback: reload and retry
     toast('Refreshing data…');
-    await loadAllData();
+    await loadAllData(true);
     renderPains();
     return;
   }
@@ -2408,7 +2456,7 @@ async function deletePG(roleKey, trustKey = '') {
   setLoading(true, 'Deleting…');
   try {
     for (const p of toDelete) {
-      if (p._atId) await atDelete('PainsGains', p._atId);
+      if (p._atId) await sbRest(`pains_gains?id=eq.${encodeURIComponent(p._atId)}`, { method: 'DELETE' });
     }
     const deleteIds = new Set(toDelete.map(p => p._atId).filter(Boolean));
     painGains = painGains.filter(p => !deleteIds.has(p._atId));
@@ -3802,8 +3850,6 @@ document.addEventListener('click', e => {
 
 // ─── AUTH (optional Supabase cross-device, or local PBKDF2) ──────────────────
 
-const AUTH_SESSION_KEY = 'ucb_auth_session_v1';
-const AUTH_ACCOUNTS_KEY = 'ucb_local_accounts_v1';
 const PBKDF2_ITERS = 210000;
 const SESSION_MS_LOCAL = 12 * 60 * 60 * 1000; // 12 hours
 
@@ -4054,9 +4100,6 @@ function syncAuthLabels() {
     if (leadIn)
       leadIn.textContent =
         'Sign in with the email and password you used when you registered on this browser.';
-    if (leadReg)
-      leadReg.textContent =
-        'Register with your email and a strong password.';
     if (hi) hi.textContent = 'Use a valid email address. For accounts that work on every device, configure Supabase in index.html.';
   }
 }
@@ -4126,6 +4169,11 @@ async function submitSignIn() {
       setSbSessionFromAuthResponse(data);
       document.getElementById('auth-in-pass').value = '';
       applyAuthVisibility();
+      try {
+        await loadAllData(true);
+      } catch (err) {
+        console.warn(err);
+      }
       toast('Signed in successfully');
     } catch (e) {
       console.error(e);
@@ -4163,6 +4211,11 @@ async function submitSignIn() {
     setLocalSession(key);
     document.getElementById('auth-in-pass').value = '';
     applyAuthVisibility();
+    try {
+      await loadAllData(true);
+    } catch (err) {
+      console.warn(err);
+    }
     toast('Signed in successfully');
   } catch (e) {
     console.error(e);
@@ -4202,6 +4255,11 @@ async function submitRegister() {
       document.getElementById('auth-reg-pass').value = '';
       document.getElementById('auth-reg-pass2').value = '';
       applyAuthVisibility();
+      try {
+        await loadAllData(true);
+      } catch (err) {
+        console.warn(err);
+      }
       toast('Account created. You are now signed in.');
     } catch (e) {
       console.error(e);
@@ -4254,6 +4312,11 @@ async function submitRegister() {
     document.getElementById('auth-reg-pass').value = '';
     document.getElementById('auth-reg-pass2').value = '';
     applyAuthVisibility();
+    try {
+      await loadAllData(true);
+    } catch (err) {
+      console.warn(err);
+    }
     toast('Account created. You are now signed in.');
   } catch (e) {
     console.error(e);
@@ -4265,6 +4328,13 @@ async function submitRegister() {
 
 function signOut() {
   clearSession();
+  stakeholders = [];
+  trustRoles = {};
+  painGains = [];
+  flowRoles = {};
+  Object.entries(DEFAULT_FLOW_ROLES).forEach(([k, v]) => {
+    flowRoles[+k] = { _atId: null, leads: [...v.leads], supports: [...v.supports] };
+  });
   document.getElementById('app-shell').style.display = 'none';
   document.getElementById('landing-page').style.display = 'none';
   document.getElementById('auth-gate').style.display = 'flex';
@@ -4305,6 +4375,7 @@ function enterApp(area) {
   const navBtns = document.querySelectorAll('nav button');
   navBtns[0].classList.add('active');
   renderFlow();
+  void loadAllData(true);
 }
 
 function goHome() {

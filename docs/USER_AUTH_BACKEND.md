@@ -39,9 +39,18 @@ const SB_URL = 'https://xxxxxxxx.supabase.co';
 const SB_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
 ```
 
-Commit and deploy. The sign-in screen will switch to **work email** + password and use Supabase for registration and login.
+Commit and deploy. The sign-in screen uses **work email** + password, and **stakeholders, pathway roles, and pains & gains** are stored in your Supabase Postgres database (one isolated dataset per user via **Row Level Security**).
 
-> The anon key is **public** by design (it ships in the browser). Protect data with **Row Level Security** if you later add Supabase tables that the browser reads. For **Auth-only** usage (this app today), you are not exposing custom tables through the client.
+> The anon key is **public** by design (it ships in the browser). **Row Level Security** on the app tables ensures each signed-in user only reads and writes their own rows, even though everyone uses the same anon key.
+
+---
+
+## 3b. Create the data tables (required once per project)
+
+1. Open **SQL Editor** in the Supabase dashboard.
+2. Paste the full contents of **`docs/supabase_schema.sql`** from this repository and click **Run**.
+
+That creates `stakeholders`, `pathway_roles`, and `pains_gains` with RLS so `auth.uid()` scopes all access. Until this step is done, the app will show errors when loading or saving data.
 
 ---
 
